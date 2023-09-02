@@ -1,9 +1,8 @@
 package utils
 
 import (
-	"log"
+	"io/ioutil"
 	"os"
-	"path/filepath"
 )
 
 // W文件_是否存在 判断一个文件或文件夹是否存在
@@ -17,13 +16,11 @@ func W文件_是否存在(路径 string) bool {
 	return false
 }
 
-// 取运行目录
-func C程序_取运行目录() string {
-	exePath, err := os.Executable()
-	if err != nil {
-		log.Fatal(err)
-	}
-	res, _ := filepath.EvalSymlinks(filepath.Dir(exePath))
-	return res
+func W文件_写到文件(文件名 string, 欲写入文件的数据 []byte) error {
 
+	err := ioutil.WriteFile(文件名, 欲写入文件的数据, 0644)
+	if err != nil {
+		return err
+	}
+	return nil
 }
