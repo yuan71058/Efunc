@@ -36,5 +36,4 @@ func B编码_BASE64解码(文本 string) []byte {
 		return []byte{}
 	}
 	return 解码字节集
-
 }
