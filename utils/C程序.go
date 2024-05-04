@@ -13,7 +13,7 @@ import (
 )
 
 func C程序_延时2(毫秒 int) bool {
-	for i := 0; i < 毫秒; {
+	for i := 0; i < 毫秒; i++ {
 		time.Sleep(1 * time.Millisecond)
 	}
 	return true

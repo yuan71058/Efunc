@@ -47,6 +47,21 @@ func S时间_取现行时间() string {
 func S时间_时间戳到时间(时间戳 int64) string {
 	return time.Unix(时间戳, 0).Format(base_format)
 }
+func S时间_时间戳13到时间(时间戳 int64) string {
+	return time.Unix(时间戳/1000, 0).Format(base_format)
+}
+func S时间_时间到时间戳(时间 string) int64 {
+	layout := "2006-01-02 15:04:05"
+
+	// 解析字符串为 time.Time 对象
+	t, err := time.Parse(layout, 时间)
+	if err != nil {
+		return 0
+	}
+	// 获取 Unix 时间戳（秒）
+	timestampInSeconds := t.Unix()
+	return timestampInSeconds
+}
 
 func S时间_时间戳格式化(format string, 时间戳 int64) string {
 	var tm time.Time

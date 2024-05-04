@@ -39,10 +39,20 @@ func Float64乘Float64(值1 float64, 值2 float64) float64 {
 }
 
 // 防止精度丢失
-func Float64除int64(值1 int64, 值2 int64, 保留长度 int32) float64 {
+func Float64除int64(值1 float64, 值2 int64, 保留长度 int32) float64 {
 	var 最终 float64
-	局_精确 := decimal.NewFromInt(值1)
+	局_精确 := decimal.NewFromFloat(值1)
 	局_精确除数 := decimal.NewFromInt(值2)
+	最终, _ = 局_精确.Div(局_精确除数).Round(保留长度).Float64()
+
+	return 最终
+}
+
+// 防止精度丢失
+func Float64除float64(值1 float64, 值2 float64, 保留长度 int32) float64 {
+	var 最终 float64
+	局_精确 := decimal.NewFromFloat(值1)
+	局_精确除数 := decimal.NewFromFloat(值2)
 	最终, _ = 局_精确.Div(局_精确除数).Round(保留长度).Float64()
 
 	return 最终

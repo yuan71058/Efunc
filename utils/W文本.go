@@ -2,18 +2,43 @@ package utils
 
 import (
 	"bufio"
+	"encoding/json"
 	"fmt"
 	"github.com/axgle/mahonia"
 	"math/rand"
 	"regexp"
 	"strings"
 	"time"
+	"unicode"
 	"unicode/utf8"
 )
 
 // W文本_是否存在关键字  关键字为空 直接返回 真
 func W文本_是否包含关键字(内容, 关键字 string) bool {
 	return strings.Contains(内容, 关键字)
+}
+
+func W文本_是否为英数字母(s string) bool {
+	pattern := "^[A-Za-z0-9]+$"
+	match, _ := regexp.MatchString(pattern, s)
+	return match
+}
+
+func W文本_是否为字母(s string) bool {
+	for _, r := range s {
+		if !unicode.IsLetter(r) {
+			return false
+		}
+	}
+	return true
+}
+func W文本_是否为数字(s string) bool {
+	for _, r := range s {
+		if !unicode.IsDigit(r) {
+			return false
+		}
+	}
+	return true
 }
 
 /*
@@ -151,6 +176,14 @@ func W文本_替换(源文本, 旧文本, 新文本 string) string {
 	return strings.Replace(源文本, 旧文本, 新文本, -1)
 }
 
+func W文本_替换2(源文本 string, 替换内容 map[string]string) string {
+	局_临时 := 源文本
+	for k, v := range 替换内容 {
+		局_临时 = strings.Replace(源文本, k, v, -1)
+	}
+	return 局_临时
+}
+
 // 成功返回 位置,失败返回-1
 func W文本_寻找(源文本, 要寻找的文本 string) int {
 	return strings.Index(源文本, 要寻找的文本)
@@ -255,6 +288,18 @@ func W文本_去重复文本(原文本 string, 分割符 string) string {
 	return 局_文本
 }
 
+// 文本取出中间文本_正则方式
+func W文本_取出中间文本_批量正则(内容 string, 左边文本 string, 右边文本 string) []string {
+
+	re := regexp.MustCompile(regexp.QuoteMeta(左边文本) + `(.*?)` + regexp.QuoteMeta(右边文本))
+	result := re.FindAllStringSubmatch(内容, -1)
+	var 局_临时 = make([]string, 0, len(result))
+	for i, _ := range result {
+		局_临时 = append(局_临时, result[i][1])
+	}
+	return 局_临时
+}
+
 // 文本取出中间文本
 func W文本_取出中间文本(内容 string, 左边文本 string, 右边文本 string) string {
 	左边位置 := strings.Index(内容, 左边文本)
@@ -277,6 +322,18 @@ func W文本_取出中间文本(内容 string, 左边文本 string, 右边文本
 	return 内容
 }
 
+// 获取关键字左边文本 含关键字
+func W文本_取文本左边2(内容 string, 关键字 string) string {
+	位置 := strings.Index(内容, 关键字)
+	if 位置 == -1 {
+		return ""
+	}
+
+	位置 = 位置 + len(关键字) - 1
+	内容 = string([]byte(内容)[:位置])
+	return 内容
+}
+
 // 获取关键字左边文本
 func W文本_取文本左边(内容 string, 关键字 string) string {
 	位置 := strings.Index(内容, 关键字)
@@ -284,8 +341,8 @@ func W文本_取文本左边(内容 string, 关键字 string) string {
 		return ""
 	}
 
-	位置 = 位置 + len(关键字)
-	内容 = string([]byte(内容)[位置:])
+	位置 = 位置
+	内容 = string([]byte(内容)[:位置])
 	return 内容
 }
 
@@ -299,6 +356,15 @@ func W文本_取文本右边(内容 string, 关键字 string) string {
 	return 内容
 }
 
+// 获取关键字右边文本
+func W文本_取文本右边_带关键字(内容 string, 关键字 string) string {
+	位置 := strings.Index(内容, 关键字)
+	if 位置 == -1 {
+		return ""
+	}
+	内容 = string([]byte(内容)[位置+len(关键字):])
+	return 内容
+}
 func W文本_取随机字符串(字符串长度 int) string {
 	var strByte = []byte("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890")
 	var strByteLen = len(strByte)
@@ -389,6 +455,10 @@ func W文本_取右边(欲取其部分的文本 string, 欲取出字符的数目
 
 func W文本_删首尾空(内容 string) string {
 	return strings.TrimSpace(内容)
+}
+func W文本_是否JSON(s string) bool {
+	var js map[string]interface{}
+	return json.Unmarshal([]byte(s), &js) == nil
 }
 func W文本_删首空(欲删除空格的文本 string) string {
 	return strings.TrimLeft(欲删除空格的文本, " ")

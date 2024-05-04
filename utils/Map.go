@@ -58,3 +58,7 @@ func Map_转post数据(URL参数 map[string]string, 是否url编码 bool) string
 
 	return 局_返回
 }
+func Map_键名是否存在(m map[int]string, key int) bool {
+	_, ok := m[key]
+	return ok
+}

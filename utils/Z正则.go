@@ -7,7 +7,7 @@ import (
 
 // 校验密码   "至少八个字符，至少一个字母和一个数字："
 func Z正则_校验密码(s string, msg *string) bool {
-	匹配结果, _ := regexp.MatchString(`^[a-zA-Z]\w{5,17}$`, s)
+	匹配结果, _ := regexp.MatchString(`\S{5,17}$`, s)
 	//fmt.Println("Z正则_校验密码$s", a)
 
 	if !匹配结果 {
@@ -75,4 +75,21 @@ func Z正则_是否英数(s string, msg *string) bool {
 	}
 	*msg = "只能输入数字字母"
 	return false
+}
+
+func Z正则_取Url连接地址(str string) []string {
+	// 定义URL匹配的正则表达式
+	urlRegex := regexp.MustCompile(`(https?://[^\s]+)`)
+
+	// 使用正则表达式查找匹配的URL链接
+	urls := urlRegex.FindAllString(str, -1)
+	return urls
+}
+
+// 返回匹配的内容的第一个子文本 ()内容
+func Z正则_取全部匹配子文本(str, 正则表达式 string) []string {
+	// 定义URL匹配的正则表达式
+	urlRegex := regexp.MustCompile(正则表达式)
+	urls := urlRegex.FindAllString(str, -1)
+	return urls
 }

@@ -8,30 +8,33 @@ import (
 
 // 先入先出队列,线程安全
 type L_队列 struct {
-	l    sync.Mutex
-	data list.List
+	l      sync.Mutex
+	data   list.List
+	isInit bool
 }
 
-func (j *L_队列) init() {
+func (j *L_队列) Init() {
 	j.data.Init()
 }
 
-func (q *L_队列) J加入队列(v interface{}) {
+// 返回数量
+func (q *L_队列) J加入队列(v interface{}) int {
 	q.l.Lock()
 	defer q.l.Unlock()
 	q.data.PushFront(v)
+	return q.data.Len()
 }
 
-func (q *L_队列) T弹出队列() interface{} {
+func (q *L_队列) T弹出队列() (interface{}, bool) {
 	q.l.Lock()
 	defer q.l.Unlock()
 	iter := q.data.Back()
 	if nil == iter {
-		return nil
+		return nil, false
 	}
 	v := iter.Value
 	q.data.Remove(iter)
-	return v
+	return v, true
 }
 func (q *L_队列) T弹出队列文本(值 *string) bool {
 	q.l.Lock()
@@ -49,7 +52,6 @@ func (q *L_队列) T弹出队列文本(值 *string) bool {
 	*值 = 局_临时
 	return true
 }
-
 func (q *L_队列) Q取队列长度() int {
 	return q.data.Len()
 }

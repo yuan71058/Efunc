@@ -2,7 +2,10 @@ package utils
 
 import (
 	"bytes"
+	"compress/gzip"
 	"encoding/hex"
+	"errors"
+	"io/ioutil"
 )
 
 func Z字节集_十六进制到字节集(原始16进制文本 string) []byte {
@@ -29,4 +32,20 @@ func Z字节集_寻找(被搜寻的字节集 []byte, 欲寻找的字节集 []byt
 	}
 
 	return -1
+}
+
+func Z字节集_Gzip解压(字节集 []byte) (data []byte, err error) {
+	if len(字节集) == 0 {
+		err = errors.New("待解压数据不能为空")
+		return
+	}
+	// 创建gzip.Reader
+	gzipReader, err := gzip.NewReader(bytes.NewReader(字节集))
+	if err != nil {
+		return
+	}
+	defer gzipReader.Close()
+	// 解压缩数据
+	data, err = ioutil.ReadAll(gzipReader)
+	return
 }

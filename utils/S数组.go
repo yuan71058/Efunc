@@ -55,6 +55,13 @@ func S数组_整数是否存在(数组 []int, 整数 int) bool {
 	}
 	return false
 }
+func S数组_求平均值(参数 []int) int {
+	var 总和 int
+	for _, v := range 参数 {
+		总和 += v
+	}
+	return 总和 / len(参数)
+}
 
 // 判断数组各元素是否是空字符串或空格
 func S数组_是否为空(list []string) (isEmpty bool) {
@@ -85,4 +92,24 @@ func S数组_排序文本(arr []string) []string {
 	局_arr := arr
 	sort.Strings(局_arr)
 	return 局_arr
+}
+
+// 获取数组2有但是数组1没有的成员数组
+func S数组_整数取差集(int1 []int, int2 []int) []int {
+	existingMembers := make(map[int]bool)
+	nonExistingMembers := []int{}
+
+	// 将 int1 中的成员添加到 existingMembers 中
+	for _, member := range int1 {
+		existingMembers[member] = true
+	}
+
+	// 检查 int2 中的成员是否存在于 existingMembers 中
+	for _, member := range int2 {
+		if _, exists := existingMembers[member]; !exists {
+			nonExistingMembers = append(nonExistingMembers, member)
+		}
+	}
+
+	return nonExistingMembers
 }

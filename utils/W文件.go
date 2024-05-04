@@ -161,8 +161,10 @@ func W文件_读入文本(文件名 string) string {
 
 // 从路径中读入文件的文本内容
 func W文件_读入文件(文件名 string) []byte {
-	var data []byte
-	data, _ = ioutil.ReadFile(文件名)
+	data, err := ioutil.ReadFile(文件名)
+	if err != nil {
+		return []byte{}
+	}
 	return data
 }
 
