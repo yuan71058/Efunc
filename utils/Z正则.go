@@ -93,3 +93,23 @@ func Z正则_取全部匹配子文本(str, 正则表达式 string) []string {
 	urls := urlRegex.FindAllString(str, -1)
 	return urls
 }
+
+func Z正则_取ip端口(str string) string {
+	// 定义URL匹配的正则表达式
+	urlRegex := regexp.MustCompile(`(\d+\.\d+\.\d+\.\d+:\d+)`)
+	urls := urlRegex.FindAllString(str, -1)
+	if len(urls) == 0 {
+		return ""
+	}
+	return urls[0]
+}
+
+func Z正则_取ip端口多个(str string) []string {
+	// 定义URL匹配的正则表达式
+	urlRegex := regexp.MustCompile(`(\d+\.\d+\.\d+\.\d+:\d+)`)
+	urls := urlRegex.FindAllString(str, -1)
+	if len(urls) == 0 {
+		return []string{}
+	}
+	return urls
+}
