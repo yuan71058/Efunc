@@ -2,6 +2,7 @@ package utils
 
 import "github.com/gogf/gf/v2/util/gconv"
 import "fmt"
+import "reflect"
 
 // 字节数组
 func D到字节集(value interface{}) []byte {
@@ -41,4 +42,29 @@ func D多项选择[T any](index int, arr []T, 默认值 T) T {
 
 func G格式化文本(str string, 参数 ...interface{}) string {
 	return fmt.Sprintf(str, 参数...)
+}
+
+// 可以将通用型的文本数组转换成文本数组  还挺麻烦查了很多资料
+func D到文本数组(通用型变量 interface{}) []string {
+	var 局_文本数组 []string
+	aa := reflect.TypeOf(通用型变量).Kind()
+	if aa == reflect.Array || aa == reflect.Slice {
+		for v := range reflect.ValueOf(通用型变量).Len() {
+			index := reflect.ValueOf(通用型变量).Index(v)
+			nameValue, ok := index.Interface().(string)
+			if ok {
+				局_文本数组 = append(局_文本数组, nameValue)
+			}
+		}
+	} else {
+		局_文本数组 = append(局_文本数组, 通用型变量.(string))
+	}
+	return 局_文本数组
+}
+
+// 可以将通用型的文本数组转换成文本数组  还挺麻烦查了很多资料
+func S是否为数组(通用型变量 interface{}) bool {
+	aa := reflect.TypeOf(通用型变量).Kind()
+	return (aa == reflect.Array || aa == reflect.Slice)
+
 }
