@@ -431,7 +431,7 @@ func W文本_utf8到gbk(src string) string {
 // 操作系统需求： Windows、Linux
 func W文本_取左边(欲取其部分的文本 string, 欲取出字符的数目 int) string {
 	if len([]rune(欲取其部分的文本)) < 欲取出字符的数目 {
-		欲取出字符的数目 = len(欲取其部分的文本)
+		欲取出字符的数目 = len([]rune(欲取其部分的文本))
 	}
 	return string([]rune(欲取其部分的文本)[:欲取出字符的数目])
 }
