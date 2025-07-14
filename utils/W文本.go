@@ -7,6 +7,7 @@ import (
 	"github.com/axgle/mahonia"
 	"math/rand"
 	"regexp"
+	"strconv"
 	"strings"
 	"time"
 	"unicode"
@@ -547,4 +548,22 @@ func W文本_取重复(重复次数 int, 待重复文本 string) string {
 		str = str + 待重复文本
 	}
 	return str
+}
+
+func W文本_取随机数字数组(最小值, 最大值 int, 数量 int) []string {
+	局_数组 := make([]string, 0, 数量)
+	局_已存在 := make(map[string]bool, 数量)
+
+	for len(局_数组) < 数量 {
+		局_随机 := rand.Intn(最大值)
+		if 局_随机 < 最小值 {
+			continue
+		}
+		局_随机2 := strconv.Itoa(局_随机)
+		if _, ok := 局_已存在[局_随机2]; !ok {
+			局_已存在[局_随机2] = true
+			局_数组 = append(局_数组, 局_随机2)
+		}
+	}
+	return 局_数组
 }

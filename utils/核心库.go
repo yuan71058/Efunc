@@ -3,6 +3,7 @@ package utils
 import "github.com/gogf/gf/v2/util/gconv"
 import "fmt"
 import "reflect"
+import "encoding/json"
 
 // 字节数组
 func D到字节集(value interface{}) []byte {
@@ -42,6 +43,13 @@ func D多项选择[T any](index int, arr []T, 默认值 T) T {
 
 func G格式化文本(str string, 参数 ...interface{}) string {
 	return fmt.Sprintf(str, 参数...)
+}
+func G格式化_JSON(data string) string {
+	b, err := json.MarshalIndent(data, "", "    ") // 4空格缩进
+	if err != nil {
+		return string(data)
+	}
+	return string(b)
 }
 
 // 可以将通用型的文本数组转换成文本数组  还挺麻烦查了很多资料
