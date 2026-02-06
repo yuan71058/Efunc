@@ -21,6 +21,10 @@ func W文件_是否存在(路径 string) bool {
 }
 
 func W文件_写到文件(文件名 string, 欲写入文件的数据 []byte) error {
+	//先判断目录是否存在
+	if !W文件_是否存在(W文件_取父目录(文件名)) {
+		M目录_创建(W文件_取父目录(文件名))
+	}
 
 	err := ioutil.WriteFile(文件名, 欲写入文件的数据, 0644)
 	if err != nil {

@@ -67,3 +67,19 @@ func (q *L_队列) Dump() {
 		fmt.Println("item:", iter.Value)
 	}
 }
+func (q *L_队列) T弹出队列整数(值 *int) bool {
+	q.l.Lock()
+	defer q.l.Unlock()
+	iter := q.data.Back()
+	if nil == iter {
+		return false
+	}
+	v := iter.Value
+	局_临时, ok := v.(int)
+	if !ok {
+		return false
+	}
+	q.data.Remove(iter)
+	*值 = 局_临时
+	return true
+}

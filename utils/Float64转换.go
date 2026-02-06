@@ -74,6 +74,15 @@ func Float64到文本(值 float64, 保留小数点多少位 int) string {
 
 	return strconv.FormatFloat(值, 'f', 保留小数点多少位, 64)
 }
+func Float64从文本(值 string, 保留小数点多少位 int) float64 {
+	局_精确, err := decimal.NewFromString(值)
+	if err != nil {
+		return 0
+	}
+	局_精确2, _ := 局_精确.Round(int32(保留小数点多少位)).Float64()
+
+	return 局_精确2
+}
 
 // 防止精度丢失
 func Int64到Float64(值 int64) float64 {

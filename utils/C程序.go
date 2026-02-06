@@ -111,6 +111,22 @@ func C程序_取运行目录() string {
 
 }
 
+// 取运行目录
+func C程序_取临时目录() string {
+	// 获取 Windows 系统的临时目录路径
+	tempDir := os.Getenv("TEMP")
+	if tempDir == "" {
+		tempDir = os.Getenv("TMP")
+	}
+
+	// 如果环境变量未设置，则使用默认的临时目录
+	if tempDir == "" {
+		tempDir = filepath.Join(os.Getenv("SYSTEMROOT"), "Temp")
+	}
+
+	return tempDir
+}
+
 //调用格式： 〈逻辑型〉 运行 （文本型 欲运行的命令行，逻辑型 是否等待程序运行完毕，［整数型 被运行程序窗口显示方式］） - 系统核心支持库->系统处理
 //英文名称：run
 //本命令运行指定的可执行文件或者外部命令。如果成功，返回真，否则返回假。本命令为初级命令。

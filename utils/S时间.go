@@ -1,6 +1,7 @@
 package utils
 
 import (
+	"fmt"
 	"strings"
 	"time"
 )
@@ -93,4 +94,59 @@ func S时间_时间戳格式化(format string, 时间戳 int64) string {
 	replacer := strings.NewReplacer(patterns...)
 	str := replacer.Replace(format)
 	return tm.Format(str)
+}
+
+// 秒转时间文本 将给定的秒数转换为 年、月、日、时、分、秒 的文本表示，只显示非零项
+func S时间_秒转时间文本(秒 int64) string {
+	var 年, 月, 天, 时, 分, 剩余秒 int64
+	const (
+		每分秒数 = 60
+		每时秒数 = 3600
+		每天秒数 = 86400
+		每月秒数 = 2592000  // 按30天计算
+		每年秒数 = 31536000 // 按365天计算（即12个月）
+	)
+
+	年 = 秒 / 每年秒数
+	秒 %= 每年秒数
+
+	月 = 秒 / 每月秒数
+	秒 %= 每月秒数
+
+	天 = 秒 / 每天秒数
+	秒 %= 每天秒数
+
+	时 = 秒 / 每时秒数
+	秒 %= 每时秒数
+
+	分 = 秒 / 每分秒数
+	剩余秒 = 秒 % 每分秒数
+
+	// 构建结果字符串，只包含非零项
+	result := ""
+	if 年 > 0 {
+		result += fmt.Sprintf("%d年", 年)
+	}
+	if 月 > 0 {
+		result += fmt.Sprintf("%d月", 月)
+	}
+	if 天 > 0 {
+		result += fmt.Sprintf("%d天", 天)
+	}
+	if 时 > 0 {
+		result += fmt.Sprintf("%d时", 时)
+	}
+	if 分 > 0 {
+		result += fmt.Sprintf("%d分", 分)
+	}
+	if 剩余秒 > 0 {
+		result += fmt.Sprintf("%d秒", 剩余秒)
+	}
+
+	// 如果所有单位都是0，则显示0秒
+	if result == "" {
+		return "0秒"
+	}
+
+	return result
 }

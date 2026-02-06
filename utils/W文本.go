@@ -19,6 +19,27 @@ func W文本_是否包含关键字(内容, 关键字 string) bool {
 	return strings.Contains(内容, 关键字)
 }
 
+// W文本_是否存在关键字  关键字为空 直接返回 真
+func W文本_是否存在(内容, 关键字 string) bool {
+	return strings.Contains(内容, 关键字)
+}
+func W文本_是否存在_任意(内容 string, 关键字 []string) bool {
+	for _, v := range 关键字 {
+		if strings.Contains(内容, v) {
+			return true
+		}
+	}
+	return false
+}
+
+func W文本_是否存在_同时(内容 string, 关键字 []string) bool {
+	for _, v := range 关键字 {
+		if !strings.Contains(内容, v) {
+			return false
+		}
+	}
+	return true
+}
 func W文本_是否为英数字母(s string) bool {
 	pattern := "^[A-Za-z0-9]+$"
 	match, _ := regexp.MatchString(pattern, s)
@@ -566,4 +587,46 @@ func W文本_取随机数字数组(最小值, 最大值 int, 数量 int) []strin
 		}
 	}
 	return 局_数组
+}
+
+func W文本_去除敏感信息(内容 string) string {
+	if len(内容) == 0 {
+		return 内容
+	}
+
+	// 将字符串转换为 rune 数组以正确处理中文等多字节字符
+	runes := []rune(内容)
+	length := len(runes)
+
+	// 如果长度小于等于2，只显示第一个字符，其余用*代替
+	if length <= 2 {
+		if length == 1 {
+			return "*"
+		}
+		return string(runes[0]) + "*"
+	}
+
+	// 计算需要替换的字符数量（一半）
+	replaceCount := length / 2
+	startIndex := (length - replaceCount) / 2
+
+	// 替换中间的字符为 *
+	for i := startIndex; i < startIndex+replaceCount; i++ {
+		runes[i] = '*'
+	}
+
+	return string(runes)
+}
+
+// 高性能,预判断是否为json
+func W文本_可能为json(内容 string) bool {
+	var 结果 = false
+	if len(内容) > 2 {
+		if 内容[0] == '{' && 内容[len(内容)-1] == '}' {
+			结果 = true
+		} else if 内容[0] == '[' && 内容[len(内容)-1] == ']' {
+			结果 = true
+		}
+	}
+	return 结果
 }

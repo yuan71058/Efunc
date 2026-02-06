@@ -52,8 +52,14 @@ func S数组_反转(反转的数组切片 []interface{}) {
 	}
 }
 
-func S数组_合并文本(文本数组 []string, 连接字符 string) string {
-	return strings.Join(文本数组, 连接字符)
+func S数组_合并文本[T comparable](数组 []T, 连接字符 string) string {
+	result := ""
+	for _, item := range 数组 {
+		result += D到文本(item) + 连接字符
+	}
+	result = strings.TrimSuffix(result, 连接字符)
+	return result
+
 }
 
 func S数组_取文本出现次数(参数_数组 []string, 参数_成员 string) int {
@@ -139,6 +145,20 @@ func S数组_去重复[T comparable](数组 []T) []T {
 			result = append(result, v)
 		}
 	}
+	return result
+}
+
+func S数组_乱序[T comparable](数组 []T) []T {
+	// 创建一个新的切片用于存储乱序后的结果
+	result := make([]T, len(数组))
+	copy(result, 数组) // 复制原数组，避免修改原始数据
+
+	// 使用 Fisher-Yates 算法进行乱序
+	for i := len(result) - 1; i > 0; i-- {
+		j := rand.Intn(i + 1)                       // 生成 [0, i] 范围内的随机索引
+		result[i], result[j] = result[j], result[i] // 交换元素
+	}
+
 	return result
 }
 
