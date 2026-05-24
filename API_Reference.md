@@ -447,16 +447,57 @@ D多项选择(1, []string{"a","b","c"}, "x") // "b"
 | `B编码_Punycode编码` | `func B编码_Punycode编码(域名 string) string` | 国际化域名 Punycode 编码 |
 | `B编码_Punycode解码` | `func B编码_Punycode解码(域名 string) string` | Punycode 解码 |
 
+### ANSI/GBK 编码
+
+| 函数 | 签名 | 说明 |
+|------|------|------|
+| `B编码_UTF8到GBK` | `func B编码_UTF8到GBK(文本 string) []byte` | UTF-8 转 GBK（ANSI）编码 |
+| `B编码_GBK到UTF8` | `func B编码_GBK到UTF8(数据 []byte) string` | GBK 转 UTF-8 |
+| `B编码_UTF8到GB18030` | `func B编码_UTF8到GB18030(文本 string) []byte` | UTF-8 转 GB18030 编码 |
+| `B编码_GB18030到UTF8` | `func B编码_GB18030到UTF8(数据 []byte) string` | GB18030 转 UTF-8 |
+
+### UTF-16 编码
+
+| 函数 | 签名 | 说明 |
+|------|------|------|
+| `B编码_UTF8到UTF16` | `func B编码_UTF8到UTF16(文本 string) []byte` | UTF-8 转 UTF-16LE（含 BOM） |
+| `B编码_UTF16到UTF8` | `func B编码_UTF16到UTF8(数据 []byte) string` | UTF-16 转 UTF-8（自动识别 BOM） |
+| `B编码_UTF8到UTF16大端` | `func B编码_UTF8到UTF16大端(文本 string) []byte` | UTF-8 转 UTF-16BE（含 BOM） |
+
+### UTF-8 BOM 处理
+
+| 函数 | 签名 | 说明 |
+|------|------|------|
+| `B编码_添加UTF8BOM` | `func B编码_添加UTF8BOM(数据 []byte) []byte` | 添加 UTF-8 BOM 头（EF BB BF） |
+| `B编码_移除UTF8BOM` | `func B编码_移除UTF8BOM(数据 []byte) []byte` | 移除 UTF-8 BOM 头 |
+| `B编码_是否有UTF8BOM` | `func B编码_是否有UTF8BOM(数据 []byte) bool` | 检查是否包含 UTF-8 BOM |
+
+### Unicode 码点操作
+
+| 函数 | 签名 | 说明 |
+|------|------|------|
+| `B编码_Unicode解码` | `func B编码_Unicode解码(文本 string) string` | \uXXXX 格式解码为文本 |
+| `B编码_取Unicode码点` | `func B编码_取Unicode码点(文本 string, 位置 int) int` | 获取指定位置字符的 Unicode 码点 |
+| `B编码_码点到文本` | `func B编码_码点到文本(码点 int) string` | Unicode 码点转字符 |
+| `B编码_取UTF8字节数` | `func B编码_取UTF8字节数(文本 string) int` | 获取 UTF-8 编码字节数 |
+| `B编码_取字符数` | `func B编码_取字符数(文本 string) int` | 获取 Unicode 字符数（按 rune） |
+| `B编码_是否有效UTF8` | `func B编码_是否有效UTF8(数据 []byte) bool` | 检查是否为有效 UTF-8 |
+
 **示例**：
 
 ```go
 B编码_URL编码("go语言")           // "go%E8%AF%AD%E8%A8%80"
 B编码_usc2到文本("\\u4e2d\\u6587") // "中文"
+B编码_文本到USC2("中文")           // "\\u4e2d\\u6587"
+B编码_Unicode解码("\\u4e2d\\u6587") // "中文"
+B编码_UTF8到GBK("中文")           // GBK 字节集
+B编码_GBK到UTF8(gbk数据)          // "中文"
+B编码_UTF8到UTF16("Hi")           // UTF-16LE 字节集（含 BOM）
+B编码_取Unicode码点("中文", 0)     // 20013
+B编码_码点到文本(20013)            // "中"
+B编码_取字符数("Hello世界")        // 7
 B编码_BASE64编码([]byte("hello"))  // "aGVsbG8="
-B编码_HTML编码("<div>")            // "&lt;div&gt;"
-B编码_十六进制编码([]byte{0xFF})   // "ff"
 B编码_Punycode编码("中文.com")     // "xn--fiq228c.com"
-B编码_整数到大端(uint32(256))      // []byte{0, 0, 1, 0}
 ```
 
 ---
@@ -2095,7 +2136,7 @@ for _, c := range contours {
 | class | 5 | 28 |
 | utils/核心库 | 1 | 16 |
 | utils/辅助 | 1 | 8 |
-| utils/B编码 | 1 | 35 |
+| utils/B编码 | 1 | 49 |
 | utils/C程序 | 1 | 12 |
 | utils/Float64转换 | 1 | 11 |
 | utils/H汇编 | 1 | 1 |

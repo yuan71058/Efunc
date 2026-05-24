@@ -15,8 +15,12 @@ import (
 	"net/url"
 	"strconv"
 	"strings"
+	"unicode/utf16"
+	"unicode/utf8"
 
 	"golang.org/x/net/idna"
+	"golang.org/x/text/encoding/simplifiedchinese"
+	"golang.org/x/text/transform"
 )
 
 // ============================================================
@@ -607,4 +611,299 @@ func idnaToASCII(域名 string) (string, error) {
 // idnaToUnicode 将 Punycode 域名转换为 Unicode 形式。
 func idnaToUnicode(域名 string) (string, error) {
 	return idna.ToUnicode(域名)
+}
+
+// ============================================================
+// ANSI/GBK 编码
+// ============================================================
+
+// B编码_UTF8到GBK 将 UTF-8 编码的文本转换为 GBK（ANSI）编码。
+// 中文 Windows 系统常用 GBK 编码。
+//
+// 参数:
+//   - 文本: UTF-8 编码的文本
+//
+// 返回:
+//   - []byte: GBK 编码的字节集；转换失败返回空字节集
+func B编码_UTF8到GBK(文本 string) []byte {
+	reader := transform.NewReader(strings.NewReader(文本), simplifiedchinese.GBK.NewEncoder())
+	结果, err := io.ReadAll(reader)
+	if err != nil {
+		return []byte{}
+	}
+	return 结果
+}
+
+// B编码_GBK到UTF8 将 GBK（ANSI）编码的字节集转换为 UTF-8 文本。
+//
+// 参数:
+//   - 数据: GBK 编码的字节集
+//
+// 返回:
+//   - string: UTF-8 编码的文本；转换失败返回空串
+func B编码_GBK到UTF8(数据 []byte) string {
+	reader := transform.NewReader(bytes.NewReader(数据), simplifiedchinese.GBK.NewDecoder())
+	结果, err := io.ReadAll(reader)
+	if err != nil {
+		return ""
+	}
+	return string(结果)
+}
+
+// B编码_UTF8到GB18030 将 UTF-8 编码的文本转换为 GB18030 编码。
+// GB18030 是 GBK 的超集，支持更多中文字符。
+//
+// 参数:
+//   - 文本: UTF-8 编码的文本
+//
+// 返回:
+//   - []byte: GB18030 编码的字节集；转换失败返回空字节集
+func B编码_UTF8到GB18030(文本 string) []byte {
+	reader := transform.NewReader(strings.NewReader(文本), simplifiedchinese.GB18030.NewEncoder())
+	结果, err := io.ReadAll(reader)
+	if err != nil {
+		return []byte{}
+	}
+	return 结果
+}
+
+// B编码_GB18030到UTF8 将 GB18030 编码的字节集转换为 UTF-8 文本。
+//
+// 参数:
+//   - 数据: GB18030 编码的字节集
+//
+// 返回:
+//   - string: UTF-8 编码的文本；转换失败返回空串
+func B编码_GB18030到UTF8(数据 []byte) string {
+	reader := transform.NewReader(bytes.NewReader(数据), simplifiedchinese.GB18030.NewDecoder())
+	结果, err := io.ReadAll(reader)
+	if err != nil {
+		return ""
+	}
+	return string(结果)
+}
+
+// ============================================================
+// UTF-16 编码
+// ============================================================
+
+// B编码_UTF8到UTF16 将 UTF-8 文本转换为 UTF-16 小端序字节集。
+// Windows API 常用 UTF-16LE 编码。
+//
+// 参数:
+//   - 文本: UTF-8 编码的文本
+//
+// 返回:
+//   - []byte: UTF-16LE 编码的字节集（含 BOM 头 FF FE）
+func B编码_UTF8到UTF16(文本 string) []byte {
+	runes := []rune(文本)
+	u16 := utf16.Encode(runes)
+	结果 := make([]byte, 0, len(u16)*2+2)
+	结果 = append(结果, 0xFF, 0xFE)
+	for _, v := range u16 {
+		结果 = append(结果, byte(v), byte(v>>8))
+	}
+	return 结果
+}
+
+// B编码_UTF16到UTF8 将 UTF-16 字节集转换为 UTF-8 文本。
+// 自动识别 BOM 头判断字节序，无 BOM 默认小端。
+//
+// 参数:
+//   - 数据: UTF-16 编码的字节集
+//
+// 返回:
+//   - string: UTF-8 编码的文本
+func B编码_UTF16到UTF8(数据 []byte) string {
+	if len(数据) < 2 {
+		return ""
+	}
+	大端 := false
+	偏移 := 0
+	if 数据[0] == 0xFE && 数据[1] == 0xFF {
+		大端 = true
+		偏移 = 2
+	} else if 数据[0] == 0xFF && 数据[1] == 0xFE {
+		偏移 = 2
+	}
+
+	u16 := make([]uint16, 0, (len(数据)-偏移)/2)
+	for i := 偏移; i+1 < len(数据); i += 2 {
+		if 大端 {
+			u16 = append(u16, uint16(数据[i])<<8|uint16(数据[i+1]))
+		} else {
+			u16 = append(u16, uint16(数据[i+1])<<8|uint16(数据[i]))
+		}
+	}
+	runes := utf16.Decode(u16)
+	return string(runes)
+}
+
+// B编码_UTF8到UTF16大端 将 UTF-8 文本转换为 UTF-16 大端序字节集。
+//
+// 参数:
+//   - 文本: UTF-8 编码的文本
+//
+// 返回:
+//   - []byte: UTF-16BE 编码的字节集（含 BOM 头 FE FF）
+func B编码_UTF8到UTF16大端(文本 string) []byte {
+	runes := []rune(文本)
+	u16 := utf16.Encode(runes)
+	结果 := make([]byte, 0, len(u16)*2+2)
+	结果 = append(结果, 0xFE, 0xFF)
+	for _, v := range u16 {
+		结果 = append(结果, byte(v>>8), byte(v))
+	}
+	return 结果
+}
+
+// ============================================================
+// UTF-8 BOM 处理
+// ============================================================
+
+// B编码_添加UTF8BOM 为 UTF-8 字节集添加 BOM 头（EF BB BF）。
+// 某些 Windows 程序需要 BOM 头来识别 UTF-8 编码。
+//
+// 参数:
+//   - 数据: UTF-8 编码的字节集
+//
+// 返回:
+//   - []byte: 带 BOM 头的 UTF-8 字节集
+func B编码_添加UTF8BOM(数据 []byte) []byte {
+	if len(数据) >= 3 && 数据[0] == 0xEF && 数据[1] == 0xBB && 数据[2] == 0xBF {
+		return 数据
+	}
+	结果 := make([]byte, 0, len(数据)+3)
+	结果 = append(结果, 0xEF, 0xBB, 0xBF)
+	结果 = append(结果, 数据...)
+	return 结果
+}
+
+// B编码_移除UTF8BOM 移除 UTF-8 字节集的 BOM 头。
+//
+// 参数:
+//   - 数据: 可能包含 BOM 头的 UTF-8 字节集
+//
+// 返回:
+//   - []byte: 移除 BOM 头后的字节集
+func B编码_移除UTF8BOM(数据 []byte) []byte {
+	if len(数据) >= 3 && 数据[0] == 0xEF && 数据[1] == 0xBB && 数据[2] == 0xBF {
+		return 数据[3:]
+	}
+	return 数据
+}
+
+// B编码_是否有UTF8BOM 检查字节集是否包含 UTF-8 BOM 头。
+//
+// 参数:
+//   - 数据: 待检查的字节集
+//
+// 返回:
+//   - bool: 包含 BOM 返回 true
+func B编码_是否有UTF8BOM(数据 []byte) bool {
+	return len(数据) >= 3 && 数据[0] == 0xEF && 数据[1] == 0xBB && 数据[2] == 0xBF
+}
+
+// ============================================================
+// Unicode 码点操作
+// ============================================================
+
+// B编码_Unicode解码 将 \uXXXX 格式的 Unicode 转义序列解码为文本。
+// 支持 \uXXXX 和 \UXXXXXXXX 两种格式。
+//
+// 参数:
+//   - 文本: 包含 Unicode 转义序列的文本
+//
+// 返回:
+//   - string: 解码后的文本
+func B编码_Unicode解码(文本 string) string {
+	var 结果 strings.Builder
+	i := 0
+	for i < len(文本) {
+		if i+5 < len(文本) && 文本[i] == '\\' && 文本[i+1] == 'u' {
+			hex := 文本[i+2 : i+6]
+			val, err := strconv.ParseUint(hex, 16, 32)
+			if err == nil {
+				结果.WriteRune(rune(val))
+				i += 6
+				continue
+			}
+		}
+		if i+9 < len(文本) && 文本[i] == '\\' && 文本[i+1] == 'U' {
+			hex := 文本[i+2 : i+10]
+			val, err := strconv.ParseUint(hex, 16, 32)
+			if err == nil {
+				结果.WriteRune(rune(val))
+				i += 10
+				continue
+			}
+		}
+		结果.WriteByte(文本[i])
+		i++
+	}
+	return 结果.String()
+}
+
+// B编码_取Unicode码点 获取文本中指定位置字符的 Unicode 码点值。
+//
+// 参数:
+//   - 文本: 输入文本
+//   - 位置: 字符位置（从 0 开始，按 rune 计数）
+//
+// 返回:
+//   - int: Unicode 码点值；位置越界返回 -1
+func B编码_取Unicode码点(文本 string, 位置 int) int {
+	runes := []rune(文本)
+	if 位置 < 0 || 位置 >= len(runes) {
+		return -1
+	}
+	return int(runes[位置])
+}
+
+// B编码_码点到文本 将 Unicode 码点值转换为对应的字符。
+//
+// 参数:
+//   - 码点: Unicode 码点值
+//
+// 返回:
+//   - string: 对应的字符；无效码点返回空串
+func B编码_码点到文本(码点 int) string {
+	if 码点 < 0 || 码点 > 0x10FFFF {
+		return ""
+	}
+	return string(rune(码点))
+}
+
+// B编码_取UTF8字节数 获取文本的 UTF-8 编码字节数。
+//
+// 参数:
+//   - 文本: 输入文本
+//
+// 返回:
+//   - int: UTF-8 编码后的字节长度
+func B编码_取UTF8字节数(文本 string) int {
+	return len([]byte(文本))
+}
+
+// B编码_取字符数 获取文本的 Unicode 字符数（按 rune 计数）。
+// 与 len() 不同，此函数正确计算多字节字符。
+//
+// 参数:
+//   - 文本: 输入文本
+//
+// 返回:
+//   - int: 字符数量
+func B编码_取字符数(文本 string) int {
+	return utf8.RuneCountInString(文本)
+}
+
+// B编码_是否有效UTF8 检查字节集是否为有效的 UTF-8 编码。
+//
+// 参数:
+//   - 数据: 待检查的字节集
+//
+// 返回:
+//   - bool: 有效返回 true
+func B编码_是否有效UTF8(数据 []byte) bool {
+	return utf8.Valid(数据)
 }
