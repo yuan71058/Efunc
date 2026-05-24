@@ -9,7 +9,7 @@
 [![Version](https://img.shields.io/badge/Version-v2.0.0-blue?style=flat-square)](https://github.com/yuan71058/Efunc/releases)
 [![Go Version](https://img.shields.io/badge/Go-%3E%3D1.18-00ADD8?style=flat-square&logo=go)](https://go.dev/)
 [![License](https://img.shields.io/badge/License-MIT-green?style=flat-square)](LICENSE)
-[![Functions](https://img.shields.io/badge/Functions-470%2B-orange?style=flat-square)](API_Reference.md)
+[![Functions](https://img.shields.io/badge/Functions-500%2B-orange?style=flat-square)](API_Reference.md)
 [![Go Reference](https://pkg.go.dev/badge/github.com/yuan71058/Efunc.svg)](https://pkg.go.dev/github.com/yuan71058/Efunc)
 
 [快速开始](#-快速开始) · [模块一览](#-模块一览) · [命名规则](#-命名规则) · [更新日志](#-更新日志)
@@ -94,7 +94,7 @@ import (
 | `L_队列` | 线程安全队列 |
 | `L_队列泛型` | 泛型线程安全队列 |
 
-### 🔧 utils — 工具函数（470+）
+### 🔧 utils — 工具函数（500+）
 
 #### 基础模块
 
@@ -142,6 +142,8 @@ import (
 | 🕷 | `C爬虫` | `colly/v2` | 网页爬虫框架 |
 | 🛡 | `Q权限管理` | `casbin/v2` | RBAC/ABAC 权限管理 |
 | 🗄 | `D数据库` | `xorm` | ORM 数据库操作（MySQL/SQLite） |
+| 🪟 | `C窗口` | `user32.dll` | Windows 窗口操作（查找/枚举/消息/移动） |
+| ⚙️ | `C进程` | `kernel32.dll` | Windows 进程管理（创建/枚举/终止/优先级） |
 
 #### 企业级模块（v2.0.0 新增）
 
@@ -164,7 +166,7 @@ import (
 | 前缀 | 分类 | 示例 |
 |:----:|:----:|:-----|
 | `B` | 编码/表达式 | `B编码_URL编码` / `B表达式_计算` |
-| `C` | 程序/爬虫/类型转换 | `C程序_延时` / `C爬虫_访问` |
+| `C` | 程序/爬虫/类型转换/窗口/进程 | `C程序_延时` / `C爬虫_访问` / `C窗口_查找` / `C进程_终止` |
 | `D` | 数据库/定时 | `D数据库_连接MySQL` / `D定时_添加任务` |
 | `E` | 邮件 | `E邮件_发送` |
 | `F` | 文件监控 | `F文件监控_监控目录变化` |
@@ -232,7 +234,7 @@ import (
 
 | 文档 | 说明 |
 |:-----|:-----|
-| [API 参考文档](API_Reference.md) | 全部 470+ 函数的详细说明 |
+| [API 参考文档](API_Reference.md) | 全部 500+ 函数的详细说明 |
 | [Code Wiki](Code_Wiki.md) | 项目架构与模块详解 |
 
 ## 📋 更新日志
@@ -268,11 +270,13 @@ import (
 - `C爬虫` — 网页爬虫框架
 - `Q权限管理` — RBAC/ABAC 权限管理
 - `D数据库` — ORM 数据库操作
+- `C窗口` — Windows 窗口操作（查找/枚举/消息/移动/关闭）
+- `C进程` — Windows 进程管理（创建/枚举/终止/优先级）
 
 **📝 其他改进**
 - 全部代码添加详细中文注释
 - 修复已知编译错误
-- 函数总数从 225+ 增长至 470+
+- 函数总数从 225+ 增长至 500+
 
 ### v1.0.0
 
