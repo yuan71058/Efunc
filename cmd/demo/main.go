@@ -2,8 +2,10 @@ package main
 
 import (
 	"fmt"
+	"net/http"
 	"os"
 	"strings"
+	"time"
 
 	"github.com/yuan71058/Efunc/class"
 	. "github.com/yuan71058/Efunc/utils"
@@ -53,6 +55,9 @@ func main() {
 	示例_读写锁()
 	示例_正则表达式类()
 	示例_队列泛型()
+	示例_TCP()
+	示例_WebSocket()
+	示例_HTTP服务端()
 }
 
 func 示例_核心库() {
@@ -395,6 +400,99 @@ func 示例_队列() {
 	fmt.Println("弹出:", val, ok)
 	val, ok = 队列.T弹出队列()
 	fmt.Println("弹出:", val, ok)
+	fmt.Println()
+}
+
+func 示例_TCP() {
+	fmt.Println("===== L_TCP =====")
+	var 服务端 class.L_TCP服务端
+	服务端.S收到数据回调 = func(客户端地址 string, 数据 []byte) {
+		fmt.Println("TCP服务端收到", 客户端地址, ":", string(数据))
+	}
+	服务端.K客户端连接回调 = func(客户端地址 string) {
+		fmt.Println("TCP客户端已连接:", 客户端地址)
+	}
+	err := 服务端.Q启动(19999)
+	if err != nil {
+		fmt.Println("TCP服务端启动失败:", err)
+		fmt.Println()
+		return
+	}
+	defer 服务端.T停止()
+	fmt.Println("TCP服务端已启动:", 19999)
+
+	var 客户端 class.L_TCP客户端
+	客户端.S收到数据回调 = func(数据 []byte) {
+		fmt.Println("TCP客户端收到:", string(数据))
+	}
+	err = 客户端.L连接("127.0.0.1:19999")
+	if err != nil {
+		fmt.Println("TCP客户端连接失败:", err)
+		fmt.Println()
+		return
+	}
+	defer 客户端.D断开()
+	fmt.Println("TCP客户端已连接:", 客户端.S是否已连接())
+	客户端.F发送文本("hello from TCP client")
+	fmt.Println()
+}
+
+func 示例_WebSocket() {
+	fmt.Println("===== L_WebSocket =====")
+	var 服务端 class.L_WS服务端
+	服务端.S收到文本回调 = func(客户端ID string, 文本 string) {
+		fmt.Println("WS服务端收到", 客户端ID, ":", 文本)
+	}
+	服务端.K客户端连接回调 = func(客户端ID string) {
+		fmt.Println("WS客户端已连接:", 客户端ID)
+	}
+	err := 服务端.Q启动(19998, "/ws")
+	if err != nil {
+		fmt.Println("WS服务端启动失败:", err)
+		fmt.Println()
+		return
+	}
+	defer 服务端.T停止()
+	fmt.Println("WS服务端已启动:", 19998)
+
+	var 客户端 class.L_WS客户端
+	客户端.S收到文本回调 = func(文本 string) {
+		fmt.Println("WS客户端收到:", 文本)
+	}
+	err = 客户端.L连接("ws://127.0.0.1:19998/ws")
+	if err != nil {
+		fmt.Println("WS客户端连接失败:", err)
+		fmt.Println()
+		return
+	}
+	defer 客户端.D断开()
+	fmt.Println("WS客户端已连接:", 客户端.S是否已连接())
+	客户端.F发送文本("hello from WebSocket client")
+	fmt.Println()
+}
+
+func 示例_HTTP服务端() {
+	fmt.Println("===== L_HTTP服务端 =====")
+	var 服务端 class.L_HTTP服务端
+	服务端.T注册通用路由("/hello", func(w http.ResponseWriter, r *http.Request) {
+		class.F响应文本(w, 200, "Hello from Efunc HTTP Server!")
+	})
+	服务端.T注册路由("GET", "/api/info", func(w http.ResponseWriter, r *http.Request) {
+		class.F响应JSON(w, 200, map[string]interface{}{
+			"name":    "Efunc HTTP Server",
+			"version": "1.0",
+			"time":    time.Now().Format("2006-01-02 15:04:05"),
+		})
+	})
+	服务端.Z中间件日志()
+	err := 服务端.Q启动(19997)
+	if err != nil {
+		fmt.Println("HTTP服务端启动失败:", err)
+		fmt.Println()
+		return
+	}
+	defer 服务端.T停止()
+	fmt.Println("HTTP服务端已启动:", 服务端.Q取启动地址())
 	fmt.Println()
 }
 

@@ -12,6 +12,9 @@
   - [1.3 L_正则表达式](#13-l_正则表达式)
   - [1.4 L_队列](#14-l_队列)
   - [1.5 L_队列泛型](#15-l_队列泛型)
+  - [1.6 L_TCP服务端 / L_TCP客户端](#16-l_tcp服务端--l_tcp客户端)
+  - [1.7 L_WS服务端 / L_WS客户端](#17-l_ws服务端--l_ws客户端)
+  - [1.8 L_HTTP服务端](#18-l_http服务端)
 - [二、utils 模块（工具函数）](#二utils-模块)
   - [2.1 核心库](#21-核心库)
   - [2.2 辅助](#22-辅助)
@@ -290,6 +293,384 @@ type L_队列泛型[T any] struct {}
 队列 := class.L_队列泛型[string]{}
 队列.J加入队列("hello")
 值, ok := 队列.T弹出队列() // "hello", true
+```
+
+---
+
+## 1.6 L_TCP服务端 / L_TCP客户端
+
+> 源文件：`class/类_TCP.go` | 依赖：标准库 | 用途：TCP 服务端与客户端，支持多连接并发、消息收发与广播
+
+基于 Go 标准库 `net` 实现，使用 `bufio` 以换行符（`\n`）作为消息分隔符。每个客户端连接在独立 goroutine 中处理，通过回调函数通知上层。30 秒无数据交互自动断开。
+
+**工作原理**：服务端 `Q启动` 后监听端口，客户端 `L连接` 后双方通过回调接收数据，发送数据时自动追加 `\n` 分隔符。
+
+---
+
+### L_TCP服务端
+
+```go
+type L_TCP服务端 struct {
+    S收到数据回调  func(客户端地址 string, 数据 []byte)
+    K客户端连接回调 func(客户端地址 string)
+    K客户端断开回调 func(客户端地址 string)
+}
+```
+
+| 方法 | 签名 | 说明 |
+|------|------|------|
+| `Q启动` | `func (s *L_TCP服务端) Q启动(端口 int) error` | 启动 TCP 服务端，监听指定端口（如 8888），内部自动启动 goroutine 处理 accept 循环 |
+| `T停止` | `func (s *L_TCP服务端) T停止()` | 停止服务端，关闭 listener 和所有客户端连接 |
+| `F发送数据` | `func (s *L_TCP服务端) F发送数据(客户端地址 string, 数据 []byte) error` | 向指定客户端发送字节数据，自动追加 `\n` 分隔符。客户端地址为连接时的 `conn.RemoteAddr().String()` |
+| `F发送文本` | `func (s *L_TCP服务端) F发送文本(客户端地址 string, 文本 string) error` | 向指定客户端发送文本，等价于 `F发送数据(地址, []byte(文本))` |
+| `G广播数据` | `func (s *L_TCP服务端) G广播数据(数据 []byte)` | 向所有已连接客户端广播字节数据 |
+| `G广播文本` | `func (s *L_TCP服务端) G广播文本(文本 string)` | 向所有已连接客户端广播文本 |
+| `Q取客户端数量` | `func (s *L_TCP服务端) Q取客户端数量() int` | 获取当前已连接的客户端数量 |
+| `Q取客户端列表` | `func (s *L_TCP服务端) Q取客户端列表() []string` | 获取所有已连接客户端的地址列表（如 `["192.168.1.1:12345"]`） |
+
+**回调字段**：所有回调均在独立 goroutine 中执行，内部可安全调用发送方法。
+
+| 字段 | 类型 | 说明 |
+|------|------|------|
+| `S收到数据回调` | `func(客户端地址 string, 数据 []byte)` | 收到客户端数据时触发，数据已去除 `\n` 分隔符 |
+| `K客户端连接回调` | `func(客户端地址 string)` | 新客户端连接建立时触发 |
+| `K客户端断开回调` | `func(客户端地址 string)` | 客户端连接断开时触发 |
+
+**示例**：
+
+```go
+// 创建 TCP 服务端
+服务端 := &class.L_TCP服务端{}
+
+// 注册回调
+服务端.S收到数据回调 = func(客户端地址 string, 数据 []byte) {
+    fmt.Println("收到", 客户端地址, ":", string(数据))
+    服务端.F发送文本(客户端地址, "服务端已收到: "+string(数据))
+}
+服务端.K客户端连接回调 = func(客户端地址 string) {
+    fmt.Println("新连接:", 客户端地址)
+    服务端.F发送文本(客户端地址, "欢迎连接!")
+}
+服务端.K客户端断开回调 = func(客户端地址 string) {
+    fmt.Println("断开:", 客户端地址)
+}
+
+// 启动服务端
+if err := 服务端.Q启动(8888); err != nil {
+    panic(err)
+}
+defer 服务端.T停止()
+
+// 广播给所有客户端
+服务端.G广播文本("服务器公告: xxx")
+```
+
+---
+
+### L_TCP客户端
+
+```go
+type L_TCP客户端 struct {
+    S收到数据回调  func(数据 []byte)
+    D断开回调      func()
+}
+```
+
+| 方法 | 签名 | 说明 |
+|------|------|------|
+| `L连接` | `func (c *L_TCP客户端) L连接(地址 string) error` | 连接 TCP 服务端，地址格式 `IP:端口`（如 `127.0.0.1:8888`），超时 10 秒 |
+| `D断开` | `func (c *L_TCP客户端) D断开()` | 断开与服务端的连接 |
+| `F发送数据` | `func (c *L_TCP客户端) F发送数据(数据 []byte) error` | 发送字节数据，自动追加 `\n` 分隔符 |
+| `F发送文本` | `func (c *L_TCP客户端) F发送文本(文本 string) error` | 发送文本数据，等价于 `F发送数据([]byte(文本))` |
+| `S是否已连接` | `func (c *L_TCP客户端) S是否已连接() bool` | 检查当前是否与服务端保持连接 |
+| `Q取本地地址` | `func (c *L_TCP客户端) Q取本地地址() string` | 获取本端 socket 地址（通过 `LocalAddr()`） |
+
+**回调字段**：
+
+| 字段 | 类型 | 说明 |
+|------|------|------|
+| `S收到数据回调` | `func(数据 []byte)` | 收到服务端数据时触发，数据已去除 `\n` 分隔符 |
+| `D断开回调` | `func()` | 连接断开（主动或被动）时触发 |
+
+**示例**：
+
+```go
+// 创建客户端
+客户端 := &class.L_TCP客户端{}
+
+// 注册回调
+客户端.S收到数据回调 = func(数据 []byte) {
+    fmt.Println("收到:", string(数据))
+}
+客户端.D断开回调 = func() {
+    fmt.Println("连接已断开")
+}
+
+// 连接服务端
+if err := 客户端.L连接("127.0.0.1:8888"); err != nil {
+    panic(err)
+}
+defer 客户端.D断开()
+
+// 发送数据
+客户端.F发送文本("hello server")
+客户端.F发送数据([]byte{0x01, 0x02, 0x03})
+```
+
+---
+
+## 1.7 L_WS服务端 / L_WS客户端
+
+> 源文件：`class/类_WebSocket.go` | 依赖：`github.com/gorilla/websocket` | 用途：WebSocket 服务端与客户端，支持文本/二进制消息收发与广播
+
+基于 `gorilla/websocket` 库实现的全双工 WebSocket 通信。服务端通过 HTTP 升级协议建立 WebSocket 连接，支持同时处理文本消息（`TextMessage`）和二进制消息（`BinaryMessage`）。
+
+**与 TCP 的区别**：WebSocket 基于 HTTP 握手后升级为全双工通道，适合浏览器与服务器通信，支持文本/二进制/JSON 等多种消息格式，天然穿透防火墙和代理。
+
+---
+
+### L_WS服务端
+
+```go
+type L_WS服务端 struct {
+    S收到文本回调  func(客户端ID string, 文本 string)
+    S收到字节回调  func(客户端ID string, 数据 []byte)
+    K客户端连接回调 func(客户端ID string)
+    K客户端断开回调 func(客户端ID string)
+}
+```
+
+| 方法 | 签名 | 说明 |
+|------|------|------|
+| `Q启动` | `func (s *L_WS服务端) Q启动(端口 int, 路径 string) error` | 启动 WebSocket 服务端。客户端通过 `ws://host:端口/路径` 连接。监听地址自动设为 `:端口` |
+| `Q启动带地址` | `func (s *L_WS服务端) Q启动带地址(地址 string, 路径 string) error` | 启动服务端，可指定完整监听地址（如 `0.0.0.0:8080` 或 `127.0.0.1:8080`） |
+| `T停止` | `func (s *L_WS服务端) T停止()` | 停止服务端，关闭 HTTP 服务器和所有 WebSocket 连接 |
+| `F发送文本` | `func (s *L_WS服务端) F发送文本(客户端ID string, 文本 string) error` | 向指定客户端发送文本消息 |
+| `F发送字节` | `func (s *L_WS服务端) F发送字节(客户端ID string, 数据 []byte) error` | 向指定客户端发送二进制消息 |
+| `G广播文本` | `func (s *L_WS服务端) G广播文本(文本 string)` | 向所有已连接客户端广播文本消息 |
+| `G广播字节` | `func (s *L_WS服务端) G广播字节(数据 []byte)` | 向所有已连接客户端广播二进制消息 |
+| `Q取客户端数量` | `func (s *L_WS服务端) Q取客户端数量() int` | 获取当前已连接的客户端数量 |
+| `Q取客户端列表` | `func (s *L_WS服务端) Q取客户端列表() []string` | 获取所有已连接客户端的 ID 列表（ID 为 `conn.RemoteAddr().String()`） |
+
+**回调字段**：
+
+| 字段 | 类型 | 说明 |
+|------|------|------|
+| `S收到文本回调` | `func(客户端ID string, 文本 string)` | 收到客户端文本消息时触发 |
+| `S收到字节回调` | `func(客户端ID string, 数据 []byte)` | 收到客户端二进制消息时触发 |
+| `K客户端连接回调` | `func(客户端ID string)` | 新 WebSocket 连接建立后触发 |
+| `K客户端断开回调` | `func(客户端ID string)` | WebSocket 连接断开时触发 |
+
+**示例**：
+
+```go
+// 创建 WebSocket 服务端
+ws := &class.L_WS服务端{}
+
+// 注册文本消息回调
+ws.S收到文本回调 = func(客户端ID string, 文本 string) {
+    fmt.Printf("收到文本 [%s]: %s\n", 客户端ID, 文本)
+    ws.F发送文本(客户端ID, "回复: "+文本)
+}
+
+// 注册二进制消息回调
+ws.S收到字节回调 = func(客户端ID string, 数据 []byte) {
+    fmt.Printf("收到字节 [%s]: %d bytes\n", 客户端ID, len(数据))
+}
+
+// 注册连接/断开回调
+ws.K客户端连接回调 = func(客户端ID string) {
+    fmt.Println("WS连接:", 客户端ID)
+    ws.G广播文本("用户 " + 客户端ID + " 加入了聊天室")
+}
+ws.K客户端断开回调 = func(客户端ID string) {
+    fmt.Println("WS断开:", 客户端ID)
+}
+
+// 启动 WebSocket 服务端
+if err := ws.Q启动(8080, "/ws"); err != nil {
+    panic(err)
+}
+defer ws.T停止()
+fmt.Println("WS服务端: ws://localhost:8080/ws")
+
+// 广播消息
+ws.G广播文本("系统通知: 服务已启动")
+```
+
+---
+
+### L_WS客户端
+
+```go
+type L_WS客户端 struct {
+    S收到文本回调  func(文本 string)
+    S收到字节回调  func(数据 []byte)
+    D断开回调      func()
+}
+```
+
+| 方法 | 签名 | 说明 |
+|------|------|------|
+| `L连接` | `func (c *L_WS客户端) L连接(URL string) error` | 连接 WebSocket 服务端，URL 格式 `ws://host:port/path`（如 `ws://127.0.0.1:8080/ws`） |
+| `D断开` | `func (c *L_WS客户端) D断开()` | 断开 WebSocket 连接 |
+| `F发送文本` | `func (c *L_WS客户端) F发送文本(文本 string) error` | 发送文本消息 |
+| `F发送字节` | `func (c *L_WS客户端) F发送字节(数据 []byte) error` | 发送二进制消息 |
+| `F发送JSON` | `func (c *L_WS客户端) F发送JSON(数据 interface{}) error` | 发送 JSON 消息，使用 `conn.WriteJSON` 自动序列化。适合发送结构体数据 |
+| `S是否已连接` | `func (c *L_WS客户端) S是否已连接() bool` | 检查当前是否与服务端保持连接 |
+| `Q取远程地址` | `func (c *L_WS客户端) Q取远程地址() string` | 获取远程服务端地址（通过 `RemoteAddr()`） |
+
+**回调字段**：
+
+| 字段 | 类型 | 说明 |
+|------|------|------|
+| `S收到文本回调` | `func(文本 string)` | 收到服务端文本消息时触发 |
+| `S收到字节回调` | `func(数据 []byte)` | 收到服务端二进制消息时触发 |
+| `D断开回调` | `func()` | 连接断开时触发 |
+
+**示例**：
+
+```go
+// 创建 WebSocket 客户端
+客户端 := &class.L_WS客户端{}
+
+// 注册回调
+客户端.S收到文本回调 = func(文本 string) {
+    fmt.Println("WS收到文本:", 文本)
+}
+客户端.S收到字节回调 = func(数据 []byte) {
+    fmt.Println("WS收到字节:", len(数据), "bytes")
+}
+客户端.D断开回调 = func() {
+    fmt.Println("WebSocket连接已断开")
+}
+
+// 连接服务端
+if err := 客户端.L连接("ws://127.0.0.1:8080/ws"); err != nil {
+    panic(err)
+}
+defer 客户端.D断开()
+
+// 发送消息
+客户端.F发送文本("hello ws")
+客户端.F发送字节([]byte{0x01, 0x02, 0x03})
+客户端.F发送JSON(map[string]string{"type": "ping"})
+```
+
+---
+
+## 1.8 L_HTTP服务端
+
+> 源文件：`class/类_HTTP.go` | 依赖：标准库 | 用途：HTTP 服务端，基于 `net/http` 封装，支持路由注册、中间件、静态文件服务和便捷响应函数
+
+基于 Go 标准库 `net/http` 的 HTTP 服务端封装。提供中文 API 风格的服务器构建体验，支持按 HTTP Method 注册路由、全局中间件链、静态文件服务，以及一组便捷的响应和请求解析辅助函数。
+
+**与 WebSocket 的区别**：HTTP 是短连接（请求-响应模式），每次请求独立；WebSocket 是长连接，适合实时双向通信。本模块两者互补使用。
+
+---
+
+### L_HTTP服务端
+
+```go
+type L_HTTP服务端 struct {}
+```
+
+| 方法 | 签名 | 说明 |
+|------|------|------|
+| `Q启动` | `func (s *L_HTTP服务端) Q启动(端口 int) error` | 启动 HTTP 服务端。监听地址自动设为 `:端口`（如 8080 → `:8080`）。无路由注册时返回 404 |
+| `Q启动带地址` | `func (s *L_HTTP服务端) Q启动带地址(地址 string) error` | 启动服务端，指定完整监听地址。如 `0.0.0.0:8080`、`127.0.0.1:3000`。中间件在启动时应用 |
+| `T停止` | `func (s *L_HTTP服务端) T停止() error` | 优雅停止服务端，等待正在处理的请求完成（最多 5 秒超时）。基于 `http.Server.Shutdown` |
+| `T注册路由` | `func (s *L_HTTP服务端) T注册路由(方法 string, 路径 string, 处理函数 http.HandlerFunc)` | 注册 METHOD+路径路由。如 `T注册路由("GET", "/api/users", handler)`。方法区分大小写 |
+| `T注册通用路由` | `func (s *L_HTTP服务端) T注册通用路由(路径 string, 处理函数 http.HandlerFunc)` | 注册不区分 HTTP 方法的通配路由，所有 Method 匹配该路径均触发。注意：与 Method 路由冲突时 Go 默认使用更精确的匹配 |
+| `J静态文件服务` | `func (s *L_HTTP服务端) J静态文件服务(URL前缀 string, 本地目录 string)` | 将本地目录映射为静态文件服务。如 `J静态文件服务("/static/", "./public")` 将 `/static/index.html` 映射到 `./public/index.html` |
+| `Z中间件` | `func (s *L_HTTP服务端) Z中间件(中间件函数 func(http.HandlerFunc) http.HandlerFunc)` | 添加全局中间件，按添加顺序包裹执行。中间件在 `Q启动` / `Q启动带地址` 时生效 |
+| `Z中间件CORS` | `func (s *L_HTTP服务端) Z中间件CORS()` | 快捷添加 CORS 跨域中间件，允许所有来源访问。支持 GET/POST/PUT/DELETE/OPTIONS/PATCH 方法 |
+| `Z中间件日志` | `func (s *L_HTTP服务端) Z中间件日志()` | 快捷添加请求日志中间件，打印方法、路径和处理耗时到控制台 |
+| `Q取启动地址` | `func (s *L_HTTP服务端) Q取启动地址() string` | 获取服务端监听地址（如 `:8080`） |
+| `S是否运行中` | `func (s *L_HTTP服务端) S是否运行中() bool` | 检查服务端是否正在运行 |
+
+**中间件模式**：
+
+```go
+// 自定义中间件示例
+func myAuthMiddleware(next http.HandlerFunc) http.HandlerFunc {
+    return func(w http.ResponseWriter, r *http.Request) {
+        token := r.Header.Get("Authorization")
+        if token == "" {
+            F响应JSON(w, 401, map[string]string{"error": "unauthorized"})
+            return
+        }
+        next(w, r)
+    }
+}
+
+服务端.Z中间件(myAuthMiddleware)
+服务端.Z中间件CORS()
+服务端.Z中间件日志()
+```
+
+---
+
+### 响应辅助函数（class 包级别）
+
+这些函数不从属于 `L_HTTP服务端` 实例，可直接作为 `class.函数名` 在路由处理器中使用。
+
+| 函数 | 签名 | 说明 |
+|------|------|------|
+| `F响应JSON` | `func F响应JSON(w http.ResponseWriter, 状态码 int, 数据 interface{})` | 将数据 JSON 序列化后写入响应。自动设置 `Content-Type: application/json; charset=utf-8` |
+| `F响应文本` | `func F响应文本(w http.ResponseWriter, 状态码 int, 文本 string)` | 写入纯文本响应。自动设置 `Content-Type: text/plain; charset=utf-8` |
+| `F响应HTML` | `func F响应HTML(w http.ResponseWriter, 状态码 int, html string)` | 写入 HTML 响应。自动设置 `Content-Type: text/html; charset=utf-8` |
+| `F取查询参数` | `func F取查询参数(r *http.Request, 参数名 string) string` | 从 URL Query String 获取参数值。如 `/api?name=张三` → `F取查询参数(r, "name")` 返回 `"张三"` |
+| `F取POST参数` | `func F取POST参数(r *http.Request, 参数名 string) string` | 从 POST 表单获取参数值。内部自动调用 `r.ParseForm()` |
+| `F解析JSON请求体` | `func F解析JSON请求体(r *http.Request, 目标 interface{}) error` | 从请求 Body 解析 JSON 到目标对象。使用 `json.NewDecoder` 流式解析 |
+
+**完整示例**：
+
+```go
+// 创建 HTTP 服务端
+server := &class.L_HTTP服务端{}
+
+// 注册 GET 路由
+server.T注册路由("GET", "/api/users", func(w http.ResponseWriter, r *http.Request) {
+    users := []map[string]interface{}{
+        {"id": 1, "name": "张三"},
+        {"id": 2, "name": "李四"},
+    }
+    class.F响应JSON(w, 200, users)
+})
+
+// 注册 POST 路由
+server.T注册路由("POST", "/api/echo", func(w http.ResponseWriter, r *http.Request) {
+    var body map[string]interface{}
+    if err := class.F解析JSON请求体(r, &body); err != nil {
+        class.F响应JSON(w, 400, map[string]string{"error": err.Error()})
+        return
+    }
+    class.F响应JSON(w, 200, body)
+})
+
+// 注册通用路由
+server.T注册通用路由("/hello", func(w http.ResponseWriter, r *http.Request) {
+    name := class.F取查询参数(r, "name")
+    if name == "" {
+        name = "World"
+    }
+    class.F响应HTML(w, 200, "<h1>Hello, "+name+"!</h1>")
+})
+
+// 静态文件服务
+server.J静态文件服务("/static/", "./public")
+
+// 添加中间件
+server.Z中间件CORS()
+server.Z中间件日志()
+
+// 启动
+if err := server.Q启动(8080); err != nil {
+    panic(err)
+}
+defer server.T停止()
+fmt.Println("HTTP服务端:", "http://localhost"+server.Q取启动地址())
 ```
 
 ---
@@ -2248,7 +2629,7 @@ for _, c := range contours {
 
 | 模块 | 文件数 | 函数/方法数 |
 |------|--------|------------|
-| class | 5 | 28 |
+| class | 8 | 75 |
 | utils/核心库 | 1 | 16 |
 | utils/辅助 | 1 | 8 |
 | utils/B编码 | 1 | 49 |
@@ -2298,4 +2679,4 @@ for _, c := range contours {
 | utils/C窗口 | 1 | 24 |
 | utils/C进程 | 1 | 15 |
 | utils/OCV视觉 | 1 | 67 |
-| **合计** | **54** | **650+** |
+| **合计** | **57** | **700+** |

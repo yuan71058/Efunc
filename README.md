@@ -6,10 +6,10 @@
 
 中文命名的工具函数库，涵盖编码转换、加密校验、文本处理、文件操作、网络请求、并发安全数据结构、数据库操作、权限管理等常用功能
 
-[![Version](https://img.shields.io/badge/Version-v2.1.0-blue?style=flat-square)](https://github.com/yuan71058/Efunc/releases)
+[![Version](https://img.shields.io/badge/Version-v2.2.0-blue?style=flat-square)](https://github.com/yuan71058/Efunc/releases)
 [![Go Version](https://img.shields.io/badge/Go-%3E%3D1.18-00ADD8?style=flat-square&logo=go)](https://go.dev/)
 [![License](https://img.shields.io/badge/License-MIT-green?style=flat-square)](LICENSE)
-[![Functions](https://img.shields.io/badge/Functions-650%2B-orange?style=flat-square)](API_Reference.md)
+[![Functions](https://img.shields.io/badge/Functions-700%2B-orange?style=flat-square)](API_Reference.md)
 [![Go Reference](https://pkg.go.dev/badge/github.com/yuan71058/Efunc.svg)](https://pkg.go.dev/github.com/yuan71058/Efunc)
 
 [快速开始](#-快速开始) · [模块一览](#-模块一览) · [命名规则](#-命名规则) · [更新日志](#-更新日志)
@@ -36,7 +36,7 @@
 ## 📥 安装
 
 ```bash
-go get -u github.com/yuan71058/Efunc@v2.1.0
+go get -u github.com/yuan71058/Efunc@v2.2.0
 ```
 
 ## 🚀 快速开始
@@ -93,8 +93,13 @@ import (
 | `L_正则表达式` | 正则匹配封装 |
 | `L_队列` | 线程安全队列 |
 | `L_队列泛型` | 泛型线程安全队列 |
+| `L_TCP服务端` | TCP 服务端（多连接/回调/广播） |
+| `L_TCP客户端` | TCP 客户端（连接/收发/断线回调） |
+| `L_WS服务端` | WebSocket 服务端（文本/二进制/广播） |
+| `L_WS客户端` | WebSocket 客户端（文本/二进制/JSON） |
+| `L_HTTP服务端` | HTTP 服务端（路由/中间件/静态文件/JSON API） |
 
-### 🔧 utils — 工具函数（650+）
+### 🔧 utils — 工具函数（700+）
 
 #### 基础模块
 
@@ -238,10 +243,24 @@ import (
 
 | 文档 | 说明 |
 |:-----|:-----|
-| [API 参考文档](API_Reference.md) | 全部 500+ 函数的详细说明 |
+| [API 参考文档](API_Reference.md) | 全部 700+ 函数的详细说明 |
 | [Code Wiki](Code_Wiki.md) | 项目架构与模块详解 |
 
 ## 📋 更新日志
+
+### v2.2.0 (2026-05-24)
+
+**🌐 TCP/WebSocket/HTTP 网络类模块**
+- 新增 `L_TCP服务端` — 多连接并发、消息收发回调、广播，基于标准库 `net`
+- 新增 `L_TCP客户端` — 连接服务端、文本/字节收发、断线回调
+- 新增 `L_WS服务端` — WebSocket 服务端，支持文本/二进制消息、广播，基于 `gorilla/websocket`
+- 新增 `L_WS客户端` — WebSocket 客户端，支持文本/二进制/JSON 消息发送
+- 新增 `L_HTTP服务端` — HTTP 服务端封装，支持 Method 路由、全局中间件、CORS、静态文件服务
+- 响应辅助函数：`F响应JSON`、`F响应文本`、`F响应HTML`、`F取查询参数`、`F取POST参数`、`F解析JSON请求体`
+
+**📝 其他改进**
+- API 文档全面重写，新增详细使用示例、工作原理说明、中间件模式演示
+- 函数总数增长至 700+
 
 ### v2.1.0 (2026-05-24)
 
