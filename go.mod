@@ -33,7 +33,7 @@ require (
 	github.com/valyala/fasttemplate v1.2.2
 	github.com/vardius/message-bus v1.1.5
 	go.uber.org/zap v1.28.0
-	golang.org/x/text v0.35.0
+	golang.org/x/text v0.37.0
 	xorm.io/xorm v1.3.11
 )
 
@@ -89,11 +89,12 @@ require (
 	go.opentelemetry.io/otel/trace v1.14.0 // indirect
 	go.uber.org/multierr v1.10.0 // indirect
 	go.yaml.in/yaml/v3 v3.0.4 // indirect
-	golang.org/x/crypto v0.49.0 // indirect
+	gocv.io/x/gocv v0.43.0 // indirect
+	golang.org/x/crypto v0.51.0 // indirect
 	golang.org/x/image v0.0.0-20191009234506-e7c1f5e7dbb8 // indirect
-	golang.org/x/net v0.51.0 // indirect
+	golang.org/x/net v0.55.0 // indirect
 	golang.org/x/sync v0.20.0 // indirect
-	golang.org/x/sys v0.42.0 // indirect
+	golang.org/x/sys v0.45.0 // indirect
 	google.golang.org/appengine v1.6.8 // indirect
 	google.golang.org/protobuf v1.36.10 // indirect
 	xorm.io/builder v0.3.13 // indirect

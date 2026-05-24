@@ -94,7 +94,7 @@ import (
 | `L_队列` | 线程安全队列 |
 | `L_队列泛型` | 泛型线程安全队列 |
 
-### 🔧 utils — 工具函数（500+）
+### 🔧 utils — 工具函数（600+）
 
 #### 基础模块
 
@@ -102,7 +102,7 @@ import (
 |:----:|:-----|:-----|
 | 🏠 | `核心库` | 类型转换、三元运算、格式化 |
 | 🛠 | `辅助` | 简易文本/数组操作 |
-| 🔤 | `B编码` | URL / Base64 / USC2 编解码 |
+| 🔤 | `B编码` | URL / Base64 / Base32 / Hex / HTML / JSON / QP / Punycode 编解码 |
 | ⚙️ | `C程序` | 延时、GUID、日志、命令执行 |
 | 🔢 | `Float64转换` | 高精度浮点运算 |
 | 🎲 | `H汇编` | 随机数生成 |
@@ -144,6 +144,7 @@ import (
 | 🗄 | `D数据库` | `xorm` | ORM 数据库操作（MySQL/SQLite） |
 | 🪟 | `C窗口` | `user32.dll` | Windows 窗口操作（查找/枚举/消息/移动） |
 | ⚙️ | `C进程` | `kernel32.dll` | Windows 进程管理（创建/枚举/终止/优先级） |
+| 👁 | `OCV视觉` | `gocv` | OpenCV 计算机视觉（滤波/边缘/轮廓/特征/视频） |
 
 #### 企业级模块（v2.0.0 新增）
 
@@ -167,6 +168,7 @@ import (
 |:----:|:----:|:-----|
 | `B` | 编码/表达式 | `B编码_URL编码` / `B表达式_计算` |
 | `C` | 程序/爬虫/类型转换/窗口/进程 | `C程序_延时` / `C爬虫_访问` / `C窗口_查找` / `C进程_终止` |
+| `O` | OpenCV 视觉 | `OCV_读取图片` / `OCV_Canny边缘检测` |
 | `D` | 数据库/定时 | `D数据库_连接MySQL` / `D定时_添加任务` |
 | `E` | 邮件 | `E邮件_发送` |
 | `F` | 文件监控 | `F文件监控_监控目录变化` |
@@ -230,6 +232,7 @@ import (
 | [casbin](https://github.com/casbin/casbin/v2) | 权限管理 |
 | [xorm](https://xorm.io/xorm) | ORM 数据库操作 |
 | [imaging](https://github.com/disintegration/imaging) | 图片处理（缩放/裁剪/旋转/效果） |
+| [gocv](https://gocv.io/) | OpenCV 4.x 计算机视觉 |
 
 ## 📖 文档
 

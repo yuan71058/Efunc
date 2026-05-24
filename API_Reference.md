@@ -354,15 +354,98 @@ D多项选择(1, []string{"a","b","c"}, "x") // "b"
 
 ## 2.3 B编码
 
-> 源文件：`utils/B编码.go`
+> 源文件：`utils/B编码.go` | 依赖：`golang.org/x/net/idna`
+
+### URL 编码
 
 | 函数 | 签名 | 说明 |
 |------|------|------|
-| `B编码_URL编码` | `func B编码_URL编码(欲编码的文本 string) string` | URL 编码 |
+| `B编码_URL编码` | `func B编码_URL编码(欲编码的文本 string) string` | URL 编码（百分号编码） |
 | `B编码_URL解码` | `func B编码_URL解码(URL string) string` | URL 解码；失败返回空串 |
-| `B编码_usc2到文本` | `func B编码_usc2到文本(字符串 string) string` | USC2 转义转中文文本；失败返回空串 |
-| `B编码_BASE64编码` | `func B编码_BASE64编码(字节集 []byte) string` | Base64 编码 |
+| `B编码_URL路径编码` | `func B编码_URL路径编码(路径 string) string` | URL 路径编码（保留 / & =） |
+| `B编码_URL路径解码` | `func B编码_URL路径解码(路径 string) string` | URL 路径解码 |
+| `B编码_URL组件编码` | `func B编码_URL组件编码(网址 string) string` | URL 组件编码 |
+
+### Base64 编码
+
+| 函数 | 签名 | 说明 |
+|------|------|------|
+| `B编码_BASE64编码` | `func B编码_BASE64编码(字节集 []byte) string` | 标准 Base64 编码 |
 | `B编码_BASE64解码` | `func B编码_BASE64解码(文本 string) []byte` | Base64 解码；失败返回空字节集 |
+| `B编码_BASE64URL编码` | `func B编码_BASE64URL编码(字节集 []byte) string` | URL 安全 Base64 编码（无填充） |
+| `B编码_BASE64URL解码` | `func B编码_BASE64URL解码(文本 string) []byte` | URL 安全 Base64 解码 |
+| `B编码_BASE64无填充编码` | `func B编码_BASE64无填充编码(字节集 []byte) string` | 无填充 Base64 编码 |
+| `B编码_BASE64无填充解码` | `func B编码_BASE64无填充解码(文本 string) []byte` | 无填充 Base64 解码 |
+
+### Base32 编码
+
+| 函数 | 签名 | 说明 |
+|------|------|------|
+| `B编码_BASE32编码` | `func B编码_BASE32编码(字节集 []byte) string` | Base32 编码 |
+| `B编码_BASE32解码` | `func B编码_BASE32解码(文本 string) []byte` | Base32 解码 |
+| `B编码_BASE32HEX编码` | `func B编码_BASE32HEX编码(字节集 []byte) string` | Base32 Hex 编码 |
+| `B编码_BASE32HEX解码` | `func B编码_BASE32HEX解码(文本 string) []byte` | Base32 Hex 解码 |
+
+### Hex 编码
+
+| 函数 | 签名 | 说明 |
+|------|------|------|
+| `B编码_十六进制编码` | `func B编码_十六进制编码(字节集 []byte) string` | 十六进制编码（小写） |
+| `B编码_十六进制解码` | `func B编码_十六进制解码(文本 string) []byte` | 十六进制解码 |
+| `B编码_十六进制大写` | `func B编码_十六进制大写(字节集 []byte) string` | 十六进制编码（大写） |
+
+### Unicode / USC2 编码
+
+| 函数 | 签名 | 说明 |
+|------|------|------|
+| `B编码_usc2到文本` | `func B编码_usc2到文本(字符串 string) string` | USC2 转义转中文文本 |
+| `B编码_文本到USC2` | `func B编码_文本到USC2(文本 string) string` | 中文文本转 USC2 转义 |
+| `B编码_文本到Unicode` | `func B编码_文本到Unicode(文本 string) string` | 文本转全 Unicode 转义 |
+
+### HTML 编码
+
+| 函数 | 签名 | 说明 |
+|------|------|------|
+| `B编码_HTML编码` | `func B编码_HTML编码(文本 string) string` | HTML 特殊字符转义 |
+| `B编码_HTML解码` | `func B编码_HTML解码(文本 string) string` | HTML 实体解码 |
+
+### Quoted-Printable 编码
+
+| 函数 | 签名 | 说明 |
+|------|------|------|
+| `B编码_QP编码` | `func B编码_QP编码(字节集 []byte) string` | QP 编码（邮件传输） |
+| `B编码_QP解码` | `func B编码_QP解码(文本 string) []byte` | QP 解码 |
+
+### JSON 编码
+
+| 函数 | 签名 | 说明 |
+|------|------|------|
+| `B编码_JSON编码` | `func B编码_JSON编码(值 interface{}) string` | JSON 编码 |
+| `B编码_JSON编码缩进` | `func B编码_JSON编码缩进(值 interface{}, 前缀, 缩进 string) string` | JSON 编码（带缩进） |
+| `B编码_JSON解码` | `func B编码_JSON解码(文本 string, 目标 interface{}) error` | JSON 解码 |
+
+### MIME 编码
+
+| 函数 | 签名 | 说明 |
+|------|------|------|
+| `B编码_MIME编码` | `func B编码_MIME编码(文本 string) string` | MIME QP 编码（邮件头部） |
+| `B编码_MIMEB64编码` | `func B编码_MIMEB64编码(文本 string) string` | MIME Base64 编码 |
+
+### 字节序编码
+
+| 函数 | 签名 | 说明 |
+|------|------|------|
+| `B编码_整数到大端` | `func B编码_整数到大端(值 interface{}) []byte` | 整数转大端字节序 |
+| `B编码_整数到小端` | `func B编码_整数到小端(值 interface{}) []byte` | 整数转小端字节序 |
+| `B编码_大端到整数` | `func B编码_大端到整数(字节集 []byte) uint64` | 大端字节序转整数 |
+| `B编码_小端到整数` | `func B编码_小端到整数(字节集 []byte) uint64` | 小端字节序转整数 |
+
+### Punycode 编码
+
+| 函数 | 签名 | 说明 |
+|------|------|------|
+| `B编码_Punycode编码` | `func B编码_Punycode编码(域名 string) string` | 国际化域名 Punycode 编码 |
+| `B编码_Punycode解码` | `func B编码_Punycode解码(域名 string) string` | Punycode 解码 |
 
 **示例**：
 
@@ -370,7 +453,10 @@ D多项选择(1, []string{"a","b","c"}, "x") // "b"
 B编码_URL编码("go语言")           // "go%E8%AF%AD%E8%A8%80"
 B编码_usc2到文本("\\u4e2d\\u6587") // "中文"
 B编码_BASE64编码([]byte("hello"))  // "aGVsbG8="
-B编码_BASE64解码("aGVsbG8=")       // []byte("hello")
+B编码_HTML编码("<div>")            // "&lt;div&gt;"
+B编码_十六进制编码([]byte{0xFF})   // "ff"
+B编码_Punycode编码("中文.com")     // "xn--fiq228c.com"
+B编码_整数到大端(uint32(256))      // []byte{0, 0, 1, 0}
 ```
 
 ---
@@ -1741,14 +1827,211 @@ fmt.Println(*name, *port)
 
 ---
 
-## 附录：函数总数统计
+## 2.49 OCV视觉（OpenCV 计算机视觉）
+
+> 源文件：`utils/OCV视觉.go` | 依赖：`gocv.io/x/gocv`（需要安装 OpenCV 4.x C++ 库）
+
+### 核心操作
+
+| 函数 | 签名 | 说明 |
+|------|------|------|
+| `OCV_取版本` | `func OCV_取版本() string` | 获取 OpenCV 版本号 |
+| `OCV_取CUDA设备数` | `func OCV_取CUDA设备数() int` | 获取 CUDA 设备数量 |
+
+### 图像读取与保存
+
+| 函数 | 签名 | 说明 |
+|------|------|------|
+| `OCV_读取图片` | `func OCV_读取图片(文件路径 string) (gocv.Mat, error)` | 读取彩色图片 |
+| `OCV_读取图片灰度` | `func OCV_读取图片灰度(文件路径 string) (gocv.Mat, error)` | 读取灰度图片 |
+| `OCV_读取图片原色` | `func OCV_读取图片原色(文件路径 string) (gocv.Mat, error)` | 读取原始通道图片 |
+| `OCV_保存图片` | `func OCV_保存图片(矩阵 gocv.Mat, 文件路径 string) bool` | 保存图片到文件 |
+| `OCV_从字节读取` | `func OCV_从字节读取(数据 []byte) (gocv.Mat, error)` | 从字节读取彩色图片 |
+| `OCV_从字节读取灰度` | `func OCV_从字节读取灰度(数据 []byte) (gocv.Mat, error)` | 从字节读取灰度图片 |
+| `OCV_到字节` | `func OCV_到字节(矩阵 gocv.Mat, 扩展名 string) ([]byte, error)` | 编码为字节切片 |
+
+### Mat 信息与属性
+
+| 函数 | 签名 | 说明 |
+|------|------|------|
+| `OCV_取宽度` | `func OCV_取宽度(矩阵 gocv.Mat) int` | 获取宽度 |
+| `OCV_取高度` | `func OCV_取高度(矩阵 gocv.Mat) int` | 获取高度 |
+| `OCV_取通道数` | `func OCV_取通道数(矩阵 gocv.Mat) int` | 获取通道数 |
+| `OCV_取类型` | `func OCV_取类型(矩阵 gocv.Mat) gocv.MatType` | 获取数据类型 |
+| `OCV_取像素数` | `func OCV_取像素数(矩阵 gocv.Mat) int` | 获取总像素数 |
+| `OCV_是否为空` | `func OCV_是否为空(矩阵 gocv.Mat) bool` | 判断是否为空 |
+| `OCV_取尺寸` | `func OCV_取尺寸(矩阵 gocv.Mat) (int, int)` | 获取尺寸（宽, 高） |
+
+### 颜色空间转换
+
+| 函数 | 签名 | 说明 |
+|------|------|------|
+| `OCV_BGR转灰度` | `func OCV_BGR转灰度(矩阵 gocv.Mat) gocv.Mat` | BGR → 灰度 |
+| `OCV_灰度转BGR` | `func OCV_灰度转BGR(矩阵 gocv.Mat) gocv.Mat` | 灰度 → BGR |
+| `OCV_BGR转HSV` | `func OCV_BGR转HSV(矩阵 gocv.Mat) gocv.Mat` | BGR → HSV |
+| `OCV_HSV转BGR` | `func OCV_HSV转BGR(矩阵 gocv.Mat) gocv.Mat` | HSV → BGR |
+| `OCV_BGR转RGB` | `func OCV_BGR转RGB(矩阵 gocv.Mat) gocv.Mat` | BGR → RGB |
+| `OCV_RGB转BGR` | `func OCV_RGB转BGR(矩阵 gocv.Mat) gocv.Mat` | RGB → BGR |
+| `OCV_BGR转Lab` | `func OCV_BGR转Lab(矩阵 gocv.Mat) gocv.Mat` | BGR → Lab |
+| `OCV_BGR转YUV` | `func OCV_BGR转YUV(矩阵 gocv.Mat) gocv.Mat` | BGR → YUV |
+
+### 图像变换
+
+| 函数 | 签名 | 说明 |
+|------|------|------|
+| `OCV_缩放` | `func OCV_缩放(矩阵 gocv.Mat, 宽度, 高度 int) gocv.Mat` | 缩放到指定尺寸 |
+| `OCV_缩放按比例` | `func OCV_缩放按比例(矩阵 gocv.Mat, 水平比例, 垂直比例 float64) gocv.Mat` | 按比例缩放 |
+| `OCV_裁剪` | `func OCV_裁剪(矩阵 gocv.Mat, 左, 上, 宽度, 高度 int) gocv.Mat` | 裁剪区域 |
+| `OCV_旋转` | `func OCV_旋转(矩阵 gocv.Mat, 角度 int) gocv.Mat` | 旋转（0=90°, 1=180°, 2=270°） |
+| `OCV_水平翻转` | `func OCV_水平翻转(矩阵 gocv.Mat) gocv.Mat` | 左右镜像 |
+| `OCV_垂直翻转` | `func OCV_垂直翻转(矩阵 gocv.Mat) gocv.Mat` | 上下镜像 |
+| `OCV_仿射变换` | `func OCV_仿射变换(矩阵 gocv.Mat, 源点, 目标点 []image.Point) gocv.Mat` | 三点仿射变换 |
+| `OCV_透视变换` | `func OCV_透视变换(矩阵 gocv.Mat, 源点, 目标点 []image.Point) gocv.Mat` | 四点透视变换 |
+
+### 图像滤波
+
+| 函数 | 签名 | 说明 |
+|------|------|------|
+| `OCV_高斯模糊` | `func OCV_高斯模糊(矩阵 gocv.Mat, 核大小 int, 标准差 float64) gocv.Mat` | 高斯模糊 |
+| `OCV_中值滤波` | `func OCV_中值滤波(矩阵 gocv.Mat, 核大小 int) gocv.Mat` | 中值滤波（去椒盐噪声） |
+| `OCV_双边滤波` | `func OCV_双边滤波(矩阵 gocv.Mat, 直径 int, 颜色空间, 坐标空间 float64) gocv.Mat` | 双边滤波（保边去噪） |
+| `OCV_方框滤波` | `func OCV_方框滤波(矩阵 gocv.Mat, 核大小 int) gocv.Mat` | 方框滤波 |
+
+### 形态学操作
+
+| 函数 | 签名 | 说明 |
+|------|------|------|
+| `OCV_腐蚀` | `func OCV_腐蚀(矩阵 gocv.Mat, 核大小 int) gocv.Mat` | 腐蚀（膨胀暗区域） |
+| `OCV_膨胀` | `func OCV_膨胀(矩阵 gocv.Mat, 核大小 int) gocv.Mat` | 膨胀（膨胀亮区域） |
+| `OCV_开运算` | `func OCV_开运算(矩阵 gocv.Mat, 核大小 int) gocv.Mat` | 开运算（去小噪点） |
+| `OCV_闭运算` | `func OCV_闭运算(矩阵 gocv.Mat, 核大小 int) gocv.Mat` | 闭运算（填小孔洞） |
+| `OCV_形态学梯度` | `func OCV_形态学梯度(矩阵 gocv.Mat, 核大小 int) gocv.Mat` | 形态学梯度（提取边缘） |
+| `OCV_顶帽变换` | `func OCV_顶帽变换(矩阵 gocv.Mat, 核大小 int) gocv.Mat` | 顶帽变换（提取小亮区域） |
+| `OCV_黑帽变换` | `func OCV_黑帽变换(矩阵 gocv.Mat, 核大小 int) gocv.Mat` | 黑帽变换（提取小暗区域） |
+
+### 边缘检测
+
+| 函数 | 签名 | 说明 |
+|------|------|------|
+| `OCV_Canny边缘检测` | `func OCV_Canny边缘检测(矩阵 gocv.Mat, 低阈值, 高阈值 float64) gocv.Mat` | Canny 边缘检测 |
+| `OCV_Sobel边缘检测` | `func OCV_Sobel边缘检测(矩阵 gocv.Mat, 核大小 int) gocv.Mat` | Sobel 边缘检测 |
+| `OCV_Laplacian边缘检测` | `func OCV_Laplacian边缘检测(矩阵 gocv.Mat, 核大小 int) gocv.Mat` | Laplacian 边缘检测 |
+| `OCV_Scharr边缘检测` | `func OCV_Scharr边缘检测(矩阵 gocv.Mat) gocv.Mat` | Scharr 边缘检测 |
+
+### 阈值处理
+
+| 函数 | 签名 | 说明 |
+|------|------|------|
+| `OCV_二值化` | `func OCV_二值化(矩阵 gocv.Mat, 阈值, 最大值 float64) gocv.Mat` | 固定阈值二值化 |
+| `OCV_自适应二值化` | `func OCV_自适应二值化(矩阵 gocv.Mat, 最大值 float64, 核大小 int, 常数 float64) gocv.Mat` | 自适应阈值二值化 |
+| `OCV_反二值化` | `func OCV_反二值化(矩阵 gocv.Mat, 阈值, 最大值 float64) gocv.Mat` | 反二值化 |
+| `OCV_OTSU二值化` | `func OCV_OTSU二值化(矩阵 gocv.Mat, 最大值 float64) gocv.Mat` | OTSU 自动阈值二值化 |
+
+### 轮廓检测
+
+| 函数 | 签名 | 说明 |
+|------|------|------|
+| `OCV_查找轮廓` | `func OCV_查找轮廓(矩阵 gocv.Mat) [][]image.Point` | 查找外轮廓 |
+| `OCV_查找全部轮廓` | `func OCV_查找全部轮廓(矩阵 gocv.Mat) [][]image.Point` | 查找所有层级轮廓 |
+| `OCV_绘制轮廓` | `func OCV_绘制轮廓(矩阵 gocv.Mat, 轮廓 [][]image.Point, 颜色 color.RGBA, 线宽 int) gocv.Mat` | 绘制轮廓 |
+| `OCV_轮廓面积` | `func OCV_轮廓面积(轮廓 []image.Point) float64` | 计算轮廓面积 |
+| `OCV_轮廓周长` | `func OCV_轮廓周长(轮廓 []image.Point, 闭合 bool) float64` | 计算轮廓周长 |
+| `OCV_轮廓外接矩形` | `func OCV_轮廓外接矩形(轮廓 []image.Point) image.Rectangle` | 获取外接矩形 |
+| `OCV_轮廓最小外接圆` | `func OCV_轮廓最小外接圆(轮廓 []image.Point) (image.Point, float64)` | 获取最小外接圆 |
+
+### 特征检测
+
+| 函数 | 签名 | 说明 |
+|------|------|------|
+| `OCV_Harris角点检测` | `func OCV_Harris角点检测(矩阵 gocv.Mat, 核大小 int, 标准差, K值 float64) gocv.Mat` | Harris 角点检测 |
+| `OCV_良好角点` | `func OCV_良好角点(矩阵 gocv.Mat, 最大数量 int, 质量, 最小距离 float64) []image.Point` | Shi-Tomasi 角点 |
+| `OCV_FAST角点` | `func OCV_FAST角点(矩阵 gocv.Mat, 阈值 int) []image.Point` | FAST 角点检测 |
+
+### 直方图
+
+| 函数 | 签名 | 说明 |
+|------|------|------|
+| `OCV_计算直方图` | `func OCV_计算直方图(矩阵 gocv.Mat, 区间数 int) gocv.Mat` | 计算灰度直方图 |
+| `OCV_直方图均衡化` | `func OCV_直方图均衡化(矩阵 gocv.Mat) gocv.Mat` | 直方图均衡化 |
+| `OCV_CLAHE均衡化` | `func OCV_CLAHE均衡化(矩阵 gocv.Mat, 限幅 float64, 网格大小 int) gocv.Mat` | CLAHE 自适应均衡化 |
+
+### 绘图
+
+| 函数 | 签名 | 说明 |
+|------|------|------|
+| `OCV_画线` | `func OCV_画线(矩阵 gocv.Mat, 起点, 终点 image.Point, 颜色 color.RGBA, 线宽 int) gocv.Mat` | 画直线 |
+| `OCV_画矩形` | `func OCV_画矩形(矩阵 gocv.Mat, 矩形 image.Rectangle, 颜色 color.RGBA, 线宽 int) gocv.Mat` | 画矩形 |
+| `OCV_画圆` | `func OCV_画圆(矩阵 gocv.Mat, 圆心 image.Point, 半径 int, 颜色 color.RGBA, 线宽 int) gocv.Mat` | 画圆 |
+| `OCV_画文字` | `func OCV_画文字(矩阵 gocv.Mat, 文字 string, 位置 image.Point, 字体 gocv.HersheyFont, 大小 float64, 颜色 color.RGBA, 线宽 int) gocv.Mat` | 画文字 |
+| `OCV_画椭圆` | `func OCV_画椭圆(矩阵 gocv.Mat, 圆心 image.Point, 长轴, 短轴 int, 旋转角, 起始角, 终止角 float64, 颜色 color.RGBA, 线宽 int) gocv.Mat` | 画椭圆 |
+
+### 图像运算
+
+| 函数 | 签名 | 说明 |
+|------|------|------|
+| `OCV_加法` | `func OCV_加法(矩阵1, 矩阵2 gocv.Mat) gocv.Mat` | 逐像素相加 |
+| `OCV_加权加法` | `func OCV_加权加法(矩阵1 gocv.Mat, 权重1 float64, 矩阵2 gocv.Mat, 权重2, 伽马值 float64) gocv.Mat` | 按权重相加 |
+| `OCV_减法` | `func OCV_减法(矩阵1, 矩阵2 gocv.Mat) gocv.Mat` | 逐像素相减 |
+| `OCV_按位与` | `func OCV_按位与(矩阵1, 矩阵2 gocv.Mat) gocv.Mat` | 按位与 |
+| `OCV_按位或` | `func OCV_按位或(矩阵1, 矩阵2 gocv.Mat) gocv.Mat` | 按位或 |
+| `OCV_按位异或` | `func OCV_按位异或(矩阵1, 矩阵2 gocv.Mat) gocv.Mat` | 按位异或 |
+| `OCV_按位取反` | `func OCV_按位取反(矩阵 gocv.Mat) gocv.Mat` | 按位取反 |
+
+### 视频与摄像头
+
+| 函数 | 签名 | 说明 |
+|------|------|------|
+| `OCV_打开摄像头` | `func OCV_打开摄像头(设备ID int) (*gocv.VideoCapture, error)` | 打开摄像头 |
+| `OCV_打开视频文件` | `func OCV_打开视频文件(文件路径 string) (*gocv.VideoCapture, error)` | 打开视频文件 |
+| `OCV_读取帧` | `func OCV_读取帧(捕获器 *gocv.VideoCapture) (gocv.Mat, bool)` | 读取一帧 |
+| `OCV_创建视频写入器` | `func OCV_创建视频写入器(文件路径, 编码器 string, 帧率 float64, 宽度, 高度 int) (*gocv.VideoWriter, error)` | 创建视频写入器 |
+| `OCV_写入帧` | `func OCV_写入帧(写入器 *gocv.VideoWriter, 帧 gocv.Mat)` | 写入一帧 |
+
+### 图像转换
+
+| 函数 | 签名 | 说明 |
+|------|------|------|
+| `OCV_Mat转Image` | `func OCV_Mat转Image(矩阵 gocv.Mat) image.Image` | Mat → image.Image |
+| `OCV_Image转Mat` | `func OCV_Image转Mat(图片 image.Image) (gocv.Mat, error)` | image.Image → Mat |
+
+**示例**：
+
+```go
+// 读取图片并处理
+img, _ := OCV_读取图片("photo.jpg")
+defer img.Close()
+
+gray := OCV_BGR转灰度(img)
+defer gray.Close()
+
+edges := OCV_Canny边缘检测(gray, 50, 150)
+defer edges.Close()
+
+OCV_保存图片(edges, "edges.jpg")
+
+// 缩放
+resized := OCV_缩放(img, 640, 480)
+defer resized.Close()
+
+// 查找轮廓
+contours := OCV_查找轮廓(edges)
+for _, c := range contours {
+    area := OCV_轮廓面积(c)
+    if area > 1000 {
+        rect := OCV_轮廓外接矩形(c)
+        fmt.Println("检测到区域:", rect, "面积:", area)
+    }
+}
+```
+
+> ⚠️ **注意**：OCV视觉模块依赖 OpenCV 4.x C++ 库，使用前需安装 OpenCV。详见 [gocv 安装指南](https://gocv.io/getting-started/)
 
 | 模块 | 文件数 | 函数/方法数 |
 |------|--------|------------|
 | class | 5 | 28 |
 | utils/核心库 | 1 | 16 |
 | utils/辅助 | 1 | 8 |
-| utils/B编码 | 1 | 5 |
+| utils/B编码 | 1 | 35 |
 | utils/C程序 | 1 | 12 |
 | utils/Float64转换 | 1 | 11 |
 | utils/H汇编 | 1 | 1 |
@@ -1794,4 +2077,5 @@ fmt.Println(*name, *port)
 | utils/D数据库 | 1 | 19 |
 | utils/C窗口 | 1 | 24 |
 | utils/C进程 | 1 | 15 |
-| **合计** | **53** | **500+** |
+| utils/OCV视觉 | 1 | 67 |
+| **合计** | **54** | **600+** |
