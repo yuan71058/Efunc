@@ -44,6 +44,23 @@
   - [2.29 G协程池](#229-g协程池goroutine-池管理)
   - [2.30 L日志](#230-l日志高性能结构化日志)
   - [2.31 K环境变量](#231-k环境变量环境变量管理)
+  - [2.32 M命令行](#232-m命令行命令行参数解析)
+  - [2.33 R日期解析](#233-r日期解析智能日期解析)
+  - [2.34 P对象池](#234-p对象池字节缓冲区对象池)
+  - [2.35 B表达式计算](#235-b表达式计算数学逻辑表达式)
+  - [2.36 T模板](#236-t模板高性能模板引擎)
+  - [2.37 V数据校验](#237-v数据校验结构体校验)
+  - [2.38 J结构体合并](#238-j结构体合并结构体合并与拷贝)
+  - [2.39 K表格](#239-k表格控制台表格渲染)
+  - [2.40 F文件监控](#240-f文件监控文件系统监控)
+  - [2.41 X消息总线](#241-x消息总线发布订阅消息)
+  - [2.42 H客户端](#242-h客户端http-客户端)
+  - [2.43 N键值库](#243-n键值库嵌入式键值数据库)
+  - [2.44 C爬虫](#244-c爬虫网页爬虫框架)
+  - [2.45 Q权限管理](#245-q权限管理rbacabac权限)
+  - [2.46 D数据库](#246-d数据库orm-数据库操作)
+  - [2.47 C窗口](#247-c窗口windows-窗口操作)
+  - [2.48 C进程](#248-c进程windows-进程管理)
 
 ---
 
@@ -1258,6 +1275,375 @@ K环境_设置值("APP_MODE", "production")
 
 ---
 
+## 2.32 M命令行（命令行参数解析）
+
+> 基于 Go 标准库 `flag` | 文件：`utils/M命令行.go`
+
+| 函数 | 签名 | 说明 |
+|------|------|------|
+| `M命令行_取字符串参数` | `func M命令行_取字符串参数(短名称 string, 长名称 string, 默认值 string, 说明 string) *string` | 定义并获取字符串类型命令行参数 |
+| `M命令行_取整数参数` | `func M命令行_取整数参数(短名称 string, 长名称 string, 默认值 int, 说明 string) *int` | 定义并获取整数类型命令行参数 |
+| `M命令行_取布尔参数` | `func M命令行_取布尔参数(短名称 string, 长名称 string, 默认值 bool, 说明 string) *bool` | 定义并获取布尔类型命令行参数 |
+| `M命令行_取小数参数` | `func M命令行_取小数参数(短名称 string, 长名称 string, 默认值 float64, 说明 string) *float64` | 定义并获取小数类型命令行参数 |
+| `M命令行_解析` | `func M命令行_解析()` | 解析命令行参数（定义参数后必须调用） |
+| `M命令行_取所有参数` | `func M命令行_取所有参数() []string` | 获取所有非标志参数 |
+| `M命令行_取参数数量` | `func M命令行_取参数数量() int` | 获取非标志参数数量 |
+| `M命令行_取用法` | `func M命令行_取用法() string` | 获取参数使用说明 |
+| `M命令行_设置用法` | `func M命令行_设置用法(用法函数 func())` | 自定义参数使用说明输出 |
+
+**示例**：
+
+```go
+name := M命令行_取字符串参数("n", "name", "world", "名称")
+port := M命令行_取整数参数("p", "port", 8080, "端口")
+M命令行_解析()
+fmt.Println(*name, *port)
+```
+
+---
+
+## 2.33 R日期解析（智能日期解析）
+
+> 基于 `github.com/araddon/dateparse` | 文件：`utils/R日期解析.go`
+
+| 函数 | 签名 | 说明 |
+|------|------|------|
+| `R日期_智能解析` | `func R日期_智能解析(日期文本 string) (time.Time, error)` | 自动识别日期格式并解析 |
+| `R日期_解析本地` | `func R日期_解析本地(日期文本 string) (time.Time, error)` | 以本地时区解析日期 |
+| `R日期_解析带格式` | `func R日期_解析带格式(日期文本 string, 格式 string) (time.Time, error)` | 按指定格式解析日期 |
+| `R日期_取可能格式` | `func R日期_取可能格式(日期文本 string) ([]string, error)` | 获取日期文本可能的格式列表 |
+| `R日期_解析任意` | `func R日期_解析任意(日期文本 string, 优先本地时区 ...bool) (time.Time, error)` | 智能解析日期（可指定时区优先） |
+| `R日期_取时间戳` | `func R日期_取时间戳(日期文本 string) (int64, error)` | 解析日期并返回 Unix 时间戳 |
+| `R日期_取日期部分` | `func R日期_取日期部分(日期文本 string) (string, error)` | 解析日期并返回日期部分（YYYY-MM-DD） |
+| `R日期_取时间部分` | `func R日期_取时间部分(日期文本 string) (string, error)` | 解析日期并返回时间部分（HH:MM:SS） |
+| `R日期_是否合法` | `func R日期_是否合法(日期文本 string) bool` | 判断日期字符串是否可被解析 |
+
+---
+
+## 2.34 P对象池（字节缓冲区对象池）
+
+> 基于 `github.com/valyala/bytebufferpool` | 文件：`utils/P对象池.go`
+
+| 函数 | 签名 | 说明 |
+|------|------|------|
+| `P对象池_获取` | `func P对象池_获取() *bytebufferpool.ByteBuffer` | 从池中获取字节缓冲区 |
+| `P对象池_放回` | `func P对象池_放回(buf *bytebufferpool.ByteBuffer)` | 归还字节缓冲区到池 |
+| `P对象池_写入` | `func P对象池_写入(数据 []byte) *bytebufferpool.ByteBuffer` | 获取缓冲区并写入数据 |
+| `P对象池_写字符串` | `func P对象池_写字符串(文本 string) *bytebufferpool.ByteBuffer` | 获取缓冲区并写入字符串 |
+
+---
+
+## 2.35 B表达式计算（数学/逻辑表达式）
+
+> 基于 `github.com/Knetic/govaluate` | 文件：`utils/B表达式计算.go`
+
+| 函数 | 签名 | 说明 |
+|------|------|------|
+| `B表达式_计算` | `func B表达式_计算(表达式 string) (interface{}, error)` | 计算简单表达式 |
+| `B表达式_计算带参数` | `func B表达式_计算带参数(表达式 string, 参数 map[string]interface{}) (interface{}, error)` | 计算带参数的表达式 |
+| `B表达式_新建` | `func B表达式_新建(表达式 string) (*govaluate.EvaluableExpression, error)` | 创建可复用的表达式对象 |
+| `B表达式_取变量` | `func B表达式_取变量(表达式 string) ([]string, error)` | 获取表达式中的变量名列表 |
+| `B表达式_是否合法` | `func B表达式_是否合法(表达式 string) bool` | 检查表达式语法是否正确 |
+| `B表达式_取运算符` | `func B表达式_取运算符(表达式 string) ([]string, error)` | 获取表达式中的运算符列表 |
+
+---
+
+## 2.36 T模板（高性能模板引擎）
+
+> 基于 `github.com/valyala/fasttemplate` | 文件：`utils/T模板.go`
+
+| 函数 | 签名 | 说明 |
+|------|------|------|
+| `T模板_执行` | `func T模板_执行(模板文本 string, 标签 map[string]interface{}) (string, error)` | 执行模板替换（`{key}` 占位符） |
+| `T模板_执行自定义` | `func T模板_执行自定义(模板文本 string, 左标签 string, 右标签 string, 标签 map[string]interface{}) (string, error)` | 自定义分隔符的模板替换 |
+| `T模板_新建` | `func T模板_新建(模板文本 string, 左标签 string, 右标签 string) (*fasttemplate.Template, error)` | 创建可复用的模板对象 |
+| `T模板_执行到写入器` | `func T模板_执行到写入器(模板 *fasttemplate.Template, 标签 map[string]interface{}, 输出 io.Writer) (int, error)` | 将模板结果写入 io.Writer |
+| `T模板_执行到字节` | `func T模板_执行到字节(模板 *fasttemplate.Template, 标签 map[string]interface{}) ([]byte, error)` | 执行模板并返回字节切片 |
+
+---
+
+## 2.37 V数据校验（结构体校验）
+
+> 基于 `github.com/go-playground/validator/v10` | 文件：`utils/V数据校验.go`
+
+| 函数 | 签名 | 说明 |
+|------|------|------|
+| `V校验_验证结构体` | `func V校验_验证结构体(结构体 interface{}) error` | 验证结构体标签约束 |
+| `V校验_验证变量` | `func V校验_验证变量(值 interface{}, 标签 string) error` | 验证单个变量 |
+| `V校验_验证字段` | `func V校验_验证字段(值 interface{}, 标签 string) error` | 验证字段值 |
+| `V校验_添加校验规则` | `func V校验_添加校验规则(标签名 string, 规则函数 validator.Func) error` | 添加自定义校验规则 |
+| `V校验_取错误详情` | `func V校验_取错误详情(err error) string` | 获取校验错误的详细信息 |
+| `V校验_取错误字段` | `func V校验_取错误字段(err error) string` | 获取校验失败的字段名 |
+| `V校验_是否校验错误` | `func V校验_是否校验错误(err error) bool` | 判断是否为校验错误 |
+| `V校验_注册别名` | `func V校验_注册别名(别名 string, 标签 string)` | 为校验标签注册别名 |
+| `V校验_排除零值` | `func V校验_排除零值(值 interface{}) bool` | 判断值是否为零值 |
+| `V校验_重置校验器` | `func V校验_重置校验器()` | 重置全局校验器实例 |
+
+---
+
+## 2.38 J结构体合并（结构体合并与拷贝）
+
+> 基于 `dario.cat/mergo` 和 `github.com/jinzhu/copier` | 文件：`utils/J结构体合并.go`
+
+| 函数 | 签名 | 说明 |
+|------|------|------|
+| `J结构体_合并` | `func J结构体_合并(目标 interface{}, 源 interface{}) error` | 合并源到目标（仅覆盖零值） |
+| `J结构体_合并覆盖` | `func J结构体_合并覆盖(目标 interface{}, 源 interface{}) error` | 合并源到目标（覆盖所有字段） |
+| `J结构体_合并带切片` | `func J结构体_合并带切片(目标 interface{}, 源 interface{}) error` | 合并时保留切片类型 |
+| `J结构体_深拷贝` | `func J结构体_深拷贝(目标 interface{}, 源 interface{}) error` | 深拷贝源到目标 |
+| `J结构体_拷贝字段` | `func J结构体_拷贝字段(目标 interface{}, 源 interface{}) error` | 按字段名拷贝（不同结构体间） |
+| `J结构体_拷贝带选项` | `func J结构体_拷贝带选项(目标 interface{}, 源 interface{}, 忽略空值 bool) error` | 带选项拷贝（可忽略空值） |
+| `J结构体_合并Map` | `func J结构体_合并Map(目标 interface{}, 源 map[string]interface{}) error` | 将 Map 合并到结构体 |
+
+---
+
+## 2.39 K表格（控制台表格渲染）
+
+> 基于 `github.com/scylladb/termtables` | 文件：`utils/K表格.go`
+
+| 函数 | 签名 | 说明 |
+|------|------|------|
+| `K表格_快速创建` | `func K表格_快速创建(表头 []string, 行数据 [][]string) string` | 快速创建并渲染表格 |
+| `K表格_新建` | `func K表格_新建() *termtables.Table` | 创建空表格对象 |
+| `K表格_添加表头` | `func K表格_添加表头(表格 *termtables.Table, 表头 []string)` | 添加表头 |
+| `K表格_添加行` | `func K表格_添加行(表格 *termtables.Table, 行 []string)` | 添加一行数据 |
+| `K表格_渲染` | `func K表格_渲染(表格 *termtables.Table) string` | 渲染表格为字符串 |
+| `K表格_设置Markdown模式` | `func K表格_设置Markdown模式(表格 *termtables.Table)` | 设置为 Markdown 格式输出 |
+| `K表格_设置对齐` | `func K表格_设置对齐(表格 *termtables.Table, 列索引 int, 对齐方式 termtables.Align)` | 设置列对齐方式 |
+
+---
+
+## 2.40 F文件监控（文件系统监控）
+
+> 基于 `github.com/fsnotify/fsnotify` | 文件：`utils/F文件监控.go`
+
+| 函数 | 签名 | 说明 |
+|------|------|------|
+| `F文件监控_新建` | `func F文件监控_新建() (*fsnotify.Watcher, error)` | 创建文件监控器 |
+| `F文件监控_添加目录` | `func F文件监控_添加目录(监控器 *fsnotify.Watcher, 目录路径 string) error` | 添加监控目录 |
+| `F文件监控_移除目录` | `func F文件监控_移除目录(监控器 *fsnotify.Watcher, 目录路径 string) error` | 移除监控目录 |
+| `F文件监控_关闭` | `func F文件监控_关闭(监控器 *fsnotify.Watcher) error` | 关闭监控器 |
+| `F文件监控_监控目录变化` | `func F文件监控_监控目录变化(目录路径 string, 回调函数 func(event fsnotify.Event)) (func(), error)` | 便捷监控目录变化 |
+| `F文件监控_监控多个目录` | `func F文件监控_监控多个目录(目录列表 []string, 回调函数 func(event fsnotify.Event)) (func(), error)` | 监控多个目录 |
+| `F文件监控_取事件类型` | `func F文件监控_取事件类型(事件 fsnotify.Event) string` | 获取事件类型描述 |
+| `F文件监控_是否创建` | `func F文件监控_是否创建(事件 fsnotify.Event) bool` | 判断是否为创建事件 |
+| `F文件监控_是否修改` | `func F文件监控_是否修改(事件 fsnotify.Event) bool` | 判断是否为修改事件 |
+
+---
+
+## 2.41 X消息总线（发布-订阅消息）
+
+> 基于 `github.com/vardius/message-bus` | 文件：`utils/X消息总线.go`
+
+| 函数 | 签名 | 说明 |
+|------|------|------|
+| `X消息_新建总线` | `func X消息_新建总线(缓冲大小 int) messagebus.MessageBus` | 创建消息总线 |
+| `X消息_发布` | `func X消息_发布(总线 messagebus.MessageBus, 主题 string, 参数 ...interface{})` | 发布消息到主题 |
+| `X消息_订阅` | `func X消息_订阅(总线 messagebus.MessageBus, 主题 string, 回调函数 interface{}) error` | 订阅主题 |
+| `X消息_取消订阅` | `func X消息_取消订阅(总线 messagebus.MessageBus, 主题 string, 回调函数 interface{}) error` | 取消订阅 |
+| `X消息_关闭总线` | `func X消息_关闭总线(总线 messagebus.MessageBus)` | 关闭消息总线 |
+
+---
+
+## 2.42 H客户端（HTTP 客户端）
+
+> 基于 `github.com/go-resty/resty/v2` | 文件：`utils/H客户端.go`
+
+| 函数 | 签名 | 说明 |
+|------|------|------|
+| `H客户端_Get` | `func H客户端_Get(网址 string) (*resty.Response, error)` | 发送 GET 请求 |
+| `H客户端_Post` | `func H客户端_Post(网址 string, 数据 interface{}) (*resty.Response, error)` | 发送 POST 请求（JSON） |
+| `H客户端_Put` | `func H客户端_Put(网址 string, 数据 interface{}) (*resty.Response, error)` | 发送 PUT 请求（JSON） |
+| `H客户端_Delete` | `func H客户端_Delete(网址 string) (*resty.Response, error)` | 发送 DELETE 请求 |
+| `H客户端_带头Get` | `func H客户端_带头Get(网址 string, 请求头 map[string]string) (*resty.Response, error)` | 带请求头的 GET |
+| `H客户端_带头Post` | `func H客户端_带头Post(网址 string, 数据 interface{}, 请求头 map[string]string) (*resty.Response, error)` | 带请求头的 POST |
+| `H客户端_设置超时` | `func H客户端_设置超时(秒数 int) *resty.Client` | 设置全局超时时间 |
+| `H客户端_设置代理` | `func H客户端_设置代理(代理地址 string) *resty.Client` | 设置 HTTP 代理 |
+| `H客户端_设置Cookie` | `func H客户端_设置Cookie(cookies []*http.Cookie) *resty.Client` | 设置全局 Cookie |
+| `H客户端_下载文件` | `func H客户端_下载文件(网址 string, 保存路径 string) error` | 下载文件到本地 |
+| `H客户端_提交表单` | `func H客户端_提交表单(网址 string, 表单数据 map[string]string) (*resty.Response, error)` | 提交表单数据 |
+| `H客户端_新建客户端` | `func H客户端_新建客户端() *resty.Client` | 创建自定义客户端实例 |
+
+---
+
+## 2.43 N键值库（嵌入式键值数据库）
+
+> 基于 `github.com/tidwall/buntdb` | 文件：`utils/N键值库.go`
+
+| 函数 | 签名 | 说明 |
+|------|------|------|
+| `N键值_打开` | `func N键值_打开(文件路径 string) (*buntdb.DB, error)` | 打开/创建键值数据库 |
+| `N键值_关闭` | `func N键值_关闭(数据库 *buntdb.DB) error` | 关闭数据库 |
+| `N键值_置值` | `func N键值_置值(数据库 *buntdb.DB, 键 string, 值 string) error` | 设置键值 |
+| `N键值_取值` | `func N键值_取值(数据库 *buntdb.DB, 键 string) (string, error)` | 获取键值 |
+| `N键值_置值带过期` | `func N键值_置值带过期(数据库 *buntdb.DB, 键 string, 值 string, 过期秒数 float64) error` | 设置键值（带过期时间） |
+| `N键值_删除` | `func N键值_删除(数据库 *buntdb.DB, 键 string) error` | 删除键 |
+| `N键值_遍历` | `func N键值_遍历(数据库 *buntdb.DB, 回调函数 func(键, 值 string) bool) error` | 遍历所有键值 |
+| `N键值_创建索引` | `func N键值_创建索引(数据库 *buntdb.DB, 索引名 string, 模式 string) error` | 创建索引 |
+
+---
+
+## 2.44 C爬虫（网页爬虫框架）
+
+> 基于 `github.com/gocolly/colly/v2` | 文件：`utils/C爬虫.go`
+
+| 函数 | 签名 | 说明 |
+|------|------|------|
+| `C爬虫_新建` | `func C爬虫_新建(选项 ...colly.CollectorOption) *colly.Collector` | 创建采集器 |
+| `C爬虫_访问` | `func C爬虫_访问(采集器 *colly.Collector, 网址 string) error` | 访问指定 URL |
+| `C爬虫_注册HTML回调` | `func C爬虫_注册HTML回调(采集器 *colly.Collector, 选择器 string, 回调函数 func(e *colly.HTMLElement))` | 注册 HTML 元素回调 |
+| `C爬虫_注册请求回调` | `func C爬虫_注册请求回调(采集器 *colly.Collector, 回调函数 func(r *colly.Request))` | 注册请求回调 |
+| `C爬虫_注册响应回调` | `func C爬虫_注册响应回调(采集器 *colly.Collector, 回调函数 func(r *colly.Response))` | 注册响应回调 |
+| `C爬虫_注册错误回调` | `func C爬虫_注册错误回调(采集器 *colly.Collector, 回调函数 func(r *colly.Response, err error))` | 注册错误回调 |
+| `C爬虫_限制并发` | `func C爬虫_限制并发(采集器 *colly.Collector, 并发数 int, 延时毫秒 int64, 域名模式 ...string)` | 限制并发和延时 |
+| `C爬虫_设置代理` | `func C爬虫_设置代理(采集器 *colly.Collector, 代理地址 string)` | 设置代理 |
+| `C爬虫_设置UserAgent` | `func C爬虫_设置UserAgent(采集器 *colly.Collector, ua string)` | 设置 User-Agent |
+| `C爬虫_设置Cookie` | `func C爬虫_设置Cookie(采集器 *colly.Collector, 网址 string, cookies []*http.Cookie)` | 设置 Cookie |
+
+---
+
+## 2.45 Q权限管理（RBAC/ABAC 权限）
+
+> 基于 `github.com/casbin/casbin/v2` | 文件：`utils/Q权限管理.go`
+
+| 函数 | 签名 | 说明 |
+|------|------|------|
+| `Q权限_新建管理器` | `func Q权限_新建管理器(模型路径 string, 策略路径 string) (*casbin.Enforcer, error)` | 从配置文件创建权限管理器 |
+| `Q权限_新建管理器从文本` | `func Q权限_新建管理器从文本(模型文本 string, 策略文本 string) (*casbin.Enforcer, error)` | 从文本创建权限管理器 |
+| `Q权限_检查权限` | `func Q权限_检查权限(管理器 *casbin.Enforcer, 主体 string, 资源 string, 操作 string) (bool, error)` | 检查权限 |
+| `Q权限_添加策略` | `func Q权限_添加策略(管理器 *casbin.Enforcer, 主体 string, 资源 string, 操作 string) (bool, error)` | 添加策略 |
+| `Q权限_删除策略` | `func Q权限_删除策略(管理器 *casbin.Enforcer, 主体 string, 资源 string, 操作 string) (bool, error)` | 删除策略 |
+| `Q权限_添加角色` | `func Q权限_添加角色(管理器 *casbin.Enforcer, 用户 string, 角色 string) (bool, error)` | 为用户添加角色 |
+| `Q权限_删除角色` | `func Q权限_删除角色(管理器 *casbin.Enforcer, 用户 string, 角色 string) (bool, error)` | 删除用户角色 |
+| `Q权限_获取角色` | `func Q权限_获取角色(管理器 *casbin.Enforcer, 用户 string) ([]string, error)` | 获取用户角色列表 |
+| `Q权限_获取权限` | `func Q权限_获取权限(管理器 *casbin.Enforcer, 主体 string) ([][]string, error)` | 获取主体权限列表 |
+| `Q权限_保存策略` | `func Q权限_保存策略(管理器 *casbin.Enforcer) error` | 保存策略到文件 |
+| `Q权限_加载策略` | `func Q权限_加载策略(管理器 *casbin.Enforcer) error` | 从文件加载策略 |
+| `Q权限_获取所有策略` | `func Q权限_获取所有策略(管理器 *casbin.Enforcer) [][]string` | 获取所有策略 |
+
+---
+
+## 2.46 D数据库（ORM 数据库操作）
+
+> 基于 `xorm.io/xorm` | 文件：`utils/D数据库.go`
+
+| 函数 | 签名 | 说明 |
+|------|------|------|
+| `D数据库_连接MySQL` | `func D数据库_连接MySQL(用户名 string, 密码 string, 主机地址 string, 数据库名 string) (*xorm.Engine, error)` | 连接 MySQL |
+| `D数据库_连接SQLite` | `func D数据库_连接SQLite(文件路径 string) (*xorm.Engine, error)` | 连接 SQLite |
+| `D数据库_测试连接` | `func D数据库_测试连接(引擎 *xorm.Engine) error` | 测试数据库连接 |
+| `D数据库_同步表` | `func D数据库_同步表(引擎 *xorm.Engine, 结构体 ...interface{}) error` | 同步结构体到表 |
+| `D数据库_插入` | `func D数据库_插入(引擎 *xorm.Engine, 记录 interface{}) (int64, error)` | 插入记录 |
+| `D数据库_查询` | `func D数据库_查询(引擎 *xorm.Engine, 结果切片 interface{}) error` | 查询记录 |
+| `D数据库_查询单条` | `func D数据库_查询单条(引擎 *xorm.Engine, 记录 interface{}) (bool, error)` | 查询单条记录 |
+| `D数据库_更新` | `func D数据库_更新(引擎 *xorm.Engine, 记录 interface{}) (int64, error)` | 更新记录 |
+| `D数据库_条件更新` | `func D数据库_条件更新(引擎 *xorm.Engine, 记录 interface{}, 条件 string, 参数 ...interface{}) (int64, error)` | 带条件更新 |
+| `D数据库_删除` | `func D数据库_删除(引擎 *xorm.Engine, 条件结构体 interface{}) (int64, error)` | 删除记录 |
+| `D数据库_条件查询` | `func D数据库_条件查询(引擎 *xorm.Engine, 结果切片 interface{}, 条件 string, 参数 ...interface{}) error` | 带条件查询 |
+| `D数据库_统计` | `func D数据库_统计(引擎 *xorm.Engine, 条件结构体 interface{}) (int64, error)` | 统计记录数 |
+| `D数据库_执行SQL` | `func D数据库_执行SQL(引擎 *xorm.Engine, sql语句 string, 参数 ...interface{}) (sql.Result, error)` | 执行原生 SQL |
+| `D数据库_事务` | `func D数据库_事务(引擎 *xorm.Engine, 事务函数 func(session *xorm.Session) (interface{}, error)) (interface{}, error)` | 执行事务 |
+| `D数据库_设置连接池` | `func D数据库_设置连接池(引擎 *xorm.Engine, 最大空闲数 int, 最大连接数 int, 最大生存时间 int)` | 设置连接池参数 |
+| `D数据库_关闭` | `func D数据库_关闭(引擎 *xorm.Engine) error` | 关闭数据库连接 |
+| `D数据库_取表名` | `func D数据库_取表名(引擎 *xorm.Engine, 结构体 interface{}) string` | 获取表名 |
+| `D数据库_表是否存在` | `func D数据库_表是否存在(引擎 *xorm.Engine, 表名 string) (bool, error)` | 检查表是否存在 |
+| `D数据库_取反射类型` | `func D数据库_取反射类型(值 interface{}) reflect.Type` | 获取反射类型 |
+
+---
+
+## 2.47 C窗口（Windows 窗口操作）
+
+> 基于 Win32 API `user32.dll` | 文件：`utils/C窗口.go` | 仅 Windows 平台
+
+| 函数 | 签名 | 说明 |
+|------|------|------|
+| `C窗口_查找` | `func C窗口_查找(类名 string, 标题 string) syscall.Handle` | 按类名/标题查找顶层窗口 |
+| `C窗口_查找子窗口` | `func C窗口_查找子窗口(父窗口 syscall.Handle, 子窗口后 syscall.Handle, 类名 string, 标题 string) syscall.Handle` | 查找子窗口 |
+| `C窗口_取标题` | `func C窗口_取标题(窗口句柄 syscall.Handle) string` | 获取窗口标题 |
+| `C窗口_置标题` | `func C窗口_置标题(窗口句柄 syscall.Handle, 标题 string) bool` | 设置窗口标题 |
+| `C窗口_取类名` | `func C窗口_取类名(窗口句柄 syscall.Handle) string` | 获取窗口类名 |
+| `C窗口_取矩形` | `func C窗口_取矩形(窗口句柄 syscall.Handle) (RECT, bool)` | 获取窗口位置和大小 |
+| `C窗口_移动` | `func C窗口_移动(窗口句柄 syscall.Handle, 左边 int32, 顶边 int32, 宽度 int32, 高度 int32, 重绘 bool) bool` | 移动/调整窗口 |
+| `C窗口_显示` | `func C窗口_显示(窗口句柄 syscall.Handle, 命令 int) bool` | 控制窗口显示状态 |
+| `C窗口_发送消息` | `func C窗口_发送消息(窗口句柄 syscall.Handle, 消息 uint32, 参数1 uintptr, 参数2 uintptr) uintptr` | 发送同步消息 |
+| `C窗口_投递消息` | `func C窗口_投递消息(窗口句柄 syscall.Handle, 消息 uint32, 参数1 uintptr, 参数2 uintptr) bool` | 投递异步消息 |
+| `C窗口_关闭` | `func C窗口_关闭(窗口句柄 syscall.Handle) bool` | 关闭窗口 |
+| `C窗口_点击按钮` | `func C窗口_点击按钮(按钮句柄 syscall.Handle) uintptr` | 点击按钮控件 |
+| `C窗口_取前台窗口` | `func C窗口_取前台窗口() syscall.Handle` | 获取前台窗口 |
+| `C窗口_置前台窗口` | `func C窗口_置前台窗口(窗口句柄 syscall.Handle) bool` | 设置前台窗口 |
+| `C窗口_是否可见` | `func C窗口_是否可见(窗口句柄 syscall.Handle) bool` | 检查窗口是否可见 |
+| `C窗口_是否有效` | `func C窗口_是否有效(窗口句柄 syscall.Handle) bool` | 检查窗口句柄是否有效 |
+| `C窗口_取进程ID` | `func C窗口_取进程ID(窗口句柄 syscall.Handle) (uint32, uint32)` | 获取窗口所属进程/线程 ID |
+| `C窗口_取父窗口` | `func C窗口_取父窗口(窗口句柄 syscall.Handle) syscall.Handle` | 获取父窗口 |
+| `C窗口_取桌面窗口` | `func C窗口_取桌面窗口() syscall.Handle` | 获取桌面窗口 |
+| `C窗口_启用` | `func C窗口_启用(窗口句柄 syscall.Handle, 启用 bool) bool` | 启用/禁用窗口 |
+| `C窗口_取下一个` | `func C窗口_取下一个(窗口句柄 syscall.Handle) syscall.Handle` | 获取 Z 顺序下一个窗口 |
+| `C窗口_取所有子窗口` | `func C窗口_取所有子窗口(父窗口 syscall.Handle) []syscall.Handle` | 获取所有子窗口 |
+| `C窗口_置文本` | `func C窗口_置文本(窗口句柄 syscall.Handle, 文本 string) uintptr` | 设置编辑框文本 |
+| `C窗口_取文本` | `func C窗口_取文本(窗口句柄 syscall.Handle) string` | 获取编辑框文本 |
+
+**常量**：
+
+| 常量 | 值 | 说明 |
+|------|-----|------|
+| `SW_HIDE` | 0 | 隐藏窗口 |
+| `SW_SHOW` | 5 | 显示窗口 |
+| `SW_MINIMIZE` | 6 | 最小化窗口 |
+| `SW_MAXIMIZE` | 3 | 最大化窗口 |
+| `SW_RESTORE` | 9 | 还原窗口 |
+| `WM_CLOSE` | 0x0010 | 关闭消息 |
+| `WM_SETTEXT` | 0x000C | 设置文本消息 |
+| `WM_GETTEXT` | 0x000D | 获取文本消息 |
+| `BM_CLICK` | 0x00F5 | 按钮点击消息 |
+
+---
+
+## 2.48 C进程（Windows 进程管理）
+
+> 基于 Win32 API `kernel32.dll` | 文件：`utils/C进程.go` | 仅 Windows 平台
+
+| 函数 | 签名 | 说明 |
+|------|------|------|
+| `C进程_创建` | `func C进程_创建(程序路径 string, 命令行 string, 工作目录 string) (*PROCESS_INFORMATION, error)` | 创建新进程 |
+| `C进程_打开` | `func C进程_打开(进程ID uint32, 访问权限 uint32) (syscall.Handle, error)` | 打开已存在进程 |
+| `C进程_终止` | `func C进程_终止(进程ID uint32, 退出码 uint32) error` | 终止进程 |
+| `C进程_是否存活` | `func C进程_是否存活(进程ID uint32) bool` | 检查进程是否运行 |
+| `C进程_等待` | `func C进程_等待(进程句柄 syscall.Handle, 超时毫秒 uint32) uint32` | 等待进程退出 |
+| `C进程_关闭句柄` | `func C进程_关闭句柄(句柄 syscall.Handle) bool` | 关闭句柄 |
+| `C进程_取当前ID` | `func C进程_取当前ID() uint32` | 获取当前进程 ID |
+| `C进程_取ID` | `func C进程_取ID(进程句柄 syscall.Handle) uint32` | 通过句柄获取进程 ID |
+| `C进程_取退出码` | `func C进程_取退出码(进程句柄 syscall.Handle) (uint32, bool)` | 获取进程退出码 |
+| `C进程_设置优先级` | `func C进程_设置优先级(进程句柄 syscall.Handle, 优先级 uint32) bool` | 设置进程优先级 |
+| `C进程_取优先级` | `func C进程_取优先级(进程句柄 syscall.Handle) (uint32, bool)` | 获取进程优先级 |
+| `C进程_枚举` | `func C进程_枚举() ([]PROCESSENTRY32W, error)` | 枚举所有进程 |
+| `C进程_按名查找` | `func C进程_按名查找(进程名 string) ([]uint32, error)` | 按进程名查找 |
+| `C进程_取模块路径` | `func C进程_取模块路径(进程ID uint32) (string, error)` | 获取进程可执行文件路径 |
+| `C进程_取父进程ID` | `func C进程_取父进程ID(进程ID uint32) (uint32, error)` | 获取父进程 ID |
+
+**常量**：
+
+| 常量 | 值 | 说明 |
+|------|-----|------|
+| `PROCESS_TERMINATE` | 0x0001 | 终止进程权限 |
+| `PROCESS_QUERY_INFORMATION` | 0x0400 | 查询进程信息权限 |
+| `STILL_ACTIVE` | 259 | 进程仍在运行 |
+| `INFINITE` | 0xFFFFFFFF | 无限等待 |
+| `IDLE_PRIORITY_CLASS` | 0x0040 | 空闲优先级 |
+| `NORMAL_PRIORITY_CLASS` | 0x0020 | 正常优先级 |
+| `HIGH_PRIORITY_CLASS` | 0x0080 | 高优先级 |
+| `REALTIME_PRIORITY_CLASS` | 0x0100 | 实时优先级 |
+
+**结构体**：
+
+| 结构体 | 说明 |
+|--------|------|
+| `RECT` | 窗口矩形区域（Left, Top, Right, Bottom） |
+| `PROCESSENTRY32W` | 进程信息（ProcessID, ParentProcessID, ExeFile 等） |
+| `STARTUPINFOW` | 进程启动信息 |
+| `PROCESS_INFORMATION` | 进程信息（Process, Thread, ProcessID, ThreadID） |
+
+---
+
 ## 附录：函数总数统计
 
 | 模块 | 文件数 | 函数/方法数 |
@@ -1294,4 +1680,21 @@ K环境_设置值("APP_MODE", "production")
 | utils/G协程池 | 1 | 10 |
 | utils/L日志 | 1 | 11 |
 | utils/K环境变量 | 1 | 9 |
-| **合计** | **36** | **321** |
+| utils/M命令行 | 1 | 9 |
+| utils/R日期解析 | 1 | 9 |
+| utils/P对象池 | 1 | 4 |
+| utils/B表达式计算 | 1 | 6 |
+| utils/T模板 | 1 | 5 |
+| utils/V数据校验 | 1 | 10 |
+| utils/J结构体合并 | 1 | 7 |
+| utils/K表格 | 1 | 7 |
+| utils/F文件监控 | 1 | 9 |
+| utils/X消息总线 | 1 | 5 |
+| utils/H客户端 | 1 | 12 |
+| utils/N键值库 | 1 | 8 |
+| utils/C爬虫 | 1 | 10 |
+| utils/Q权限管理 | 1 | 12 |
+| utils/D数据库 | 1 | 19 |
+| utils/C窗口 | 1 | 24 |
+| utils/C进程 | 1 | 15 |
+| **合计** | **53** | **500+** |
