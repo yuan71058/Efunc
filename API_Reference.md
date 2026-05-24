@@ -551,20 +551,52 @@ Float64除float64(1.0, 3.0, 4)  // 0.3333
 
 > 源文件：`utils/J校验.go`
 
+### 哈希计算
+
 | 函数 | 签名 | 说明 |
 |------|------|------|
 | `J校验_取md5` | `func J校验_取md5(字节集数据 []byte, 返回值转成大写 bool) string` | 计算 MD5（32 位 16 进制） |
 | `J校验_取md5_文本` | `func J校验_取md5_文本(文本数据 string, 返回值转成大写 bool) string` | 文本 MD5 |
+| `J校验_取md5_16位` | `func J校验_取md5_16位(字节集数据 []byte, 返回值转成大写 bool) string` | 16 位 MD5（取 32 位中间 16 位） |
+| `J校验_取md5_文件` | `func J校验_取md5_文件(文件路径 string, 返回值转成大写 bool) (string, error)` | 文件 MD5（流式读取，支持大文件） |
 | `J校验_取Crc32` | `func J校验_取Crc32(数据 []byte, 返回值转成大写 bool) string` | 计算 CRC32（8 位 16 进制） |
+| `J校验_取Crc32_文件` | `func J校验_取Crc32_文件(文件路径 string, 返回值转成大写 bool) (string, error)` | 文件 CRC32 |
+| `J校验_取CRC64` | `func J校验_取CRC64(数据 []byte, 返回值转成大写 bool) string` | 计算 CRC64（16 位 16 进制，ECMA 多项式） |
+| `J校验_取Adler32` | `func J校验_取Adler32(数据 []byte, 返回值转成大写 bool) string` | 计算 Adler-32（8 位 16 进制） |
 | `J校验_取sha1` | `func J校验_取sha1(数据 []byte, 返回值转成大写 bool) string` | 计算 SHA1（40 位 16 进制） |
+| `J校验_取sha1_文件` | `func J校验_取sha1_文件(文件路径 string, 返回值转成大写 bool) (string, error)` | 文件 SHA1 |
 | `J校验_取sha256` | `func J校验_取sha256(数据 []byte, 返回值转成大写 bool) string` | 计算 SHA256（64 位 16 进制） |
+| `J校验_取sha256_文件` | `func J校验_取sha256_文件(文件路径 string, 返回值转成大写 bool) (string, error)` | 文件 SHA256 |
 | `J校验_取sha512` | `func J校验_取sha512(数据 []byte, 返回值转成大写 bool) string` | 计算 SHA512（128 位 16 进制） |
+| `J校验_取sha512_文件` | `func J校验_取sha512_文件(文件路径 string, 返回值转成大写 bool) (string, error)` | 文件 SHA512 |
+
+### HMAC 消息认证
+
+| 函数 | 签名 | 说明 |
+|------|------|------|
+| `J校验_HMAC_MD5` | `func J校验_HMAC_MD5(密钥 []byte, 数据 []byte, 返回值转成大写 bool) string` | HMAC-MD5 消息认证码 |
+| `J校验_HMAC_SHA1` | `func J校验_HMAC_SHA1(密钥 []byte, 数据 []byte, 返回值转成大写 bool) string` | HMAC-SHA1 消息认证码 |
+| `J校验_HMAC_SHA256` | `func J校验_HMAC_SHA256(密钥 []byte, 数据 []byte, 返回值转成大写 bool) string` | HMAC-SHA256 消息认证码（API 签名常用） |
+| `J校验_HMAC_SHA512` | `func J校验_HMAC_SHA512(密钥 []byte, 数据 []byte, 返回值转成大写 bool) string` | HMAC-SHA512 消息认证码 |
+
+### 校验比对
+
+| 函数 | 签名 | 说明 |
+|------|------|------|
+| `J校验_校验MD5` | `func J校验_校验MD5(数据 []byte, 预期值 string) bool` | 校验 MD5 是否与预期一致（不区分大小写） |
+| `J校验_校验SHA256` | `func J校验_校验SHA256(数据 []byte, 预期值 string) bool` | 校验 SHA256 是否与预期一致 |
+| `J校验_校验文件MD5` | `func J校验_校验文件MD5(文件路径 string, 预期值 string) (bool, error)` | 校验文件 MD5 |
+| `J校验_校验文件SHA256` | `func J校验_校验文件SHA256(文件路径 string, 预期值 string) (bool, error)` | 校验文件 SHA256 |
+| `J校验_校验HMAC` | `func J校验_校验HMAC(密钥 []byte, 数据 []byte, 预期值 string) bool` | 校验 HMAC-SHA256（防时序攻击） |
 
 **示例**：
 
 ```go
 J校验_取md5_文本("hello", false) // "5d41402abc4b2a76b9719d911017c592"
-J校验_取md5_文本("hello", true)  // "5D41402ABC4B2A76B9719D911017C592"
+J校验_取md5_16位([]byte("hello"), false) // "4b2a76b9719d9110"
+J校验_取md5_文件("test.txt", false) // 流式计算大文件 MD5
+J校验_HMAC_SHA256([]byte("key"), []byte("data"), false) // API 签名
+J校验_校验MD5([]byte("hello"), "5d41402abc4b2a76b9719d911017c592") // true
 ```
 
 ---
@@ -1580,19 +1612,51 @@ fmt.Println(*name, *port)
 
 ---
 
-## 2.39 K表格（控制台表格渲染）
+## 2.39 K表格（控制台表格渲染与数据处理）
 
 > 基于 `github.com/scylladb/termtables` | 文件：`utils/K表格.go`
 
+### 表格创建与渲染
+
 | 函数 | 签名 | 说明 |
 |------|------|------|
+| `K表格_创建` | `func K表格_创建() *termtables.Table` | 创建空表格对象 |
+| `K表格_添加表头` | `func K表格_添加表头(表格 *termtables.Table, 表头 ...string)` | 添加表头 |
+| `K表格_添加行` | `func K表格_添加行(表格 *termtables.Table, 行数据 ...interface{})` | 添加一行数据 |
+| `K表格_添加分隔线` | `func K表格_添加分隔线(表格 *termtables.Table)` | 添加水平分隔线 |
+| `K表格_输出` | `func K表格_输出(表格 *termtables.Table) string` | 渲染表格为字符串 |
 | `K表格_快速创建` | `func K表格_快速创建(表头 []string, 行数据 [][]string) string` | 快速创建并渲染表格 |
-| `K表格_新建` | `func K表格_新建() *termtables.Table` | 创建空表格对象 |
-| `K表格_添加表头` | `func K表格_添加表头(表格 *termtables.Table, 表头 []string)` | 添加表头 |
-| `K表格_添加行` | `func K表格_添加行(表格 *termtables.Table, 行 []string)` | 添加一行数据 |
-| `K表格_渲染` | `func K表格_渲染(表格 *termtables.Table) string` | 渲染表格为字符串 |
-| `K表格_设置Markdown模式` | `func K表格_设置Markdown模式(表格 *termtables.Table)` | 设置为 Markdown 格式输出 |
-| `K表格_设置对齐` | `func K表格_设置对齐(表格 *termtables.Table, 列索引 int, 对齐方式 termtables.Align)` | 设置列对齐方式 |
+
+### 多格式输出
+
+| 函数 | 签名 | 说明 |
+|------|------|------|
+| `K表格_输出Markdown` | `func K表格_输出Markdown(表头 []string, 行数据 [][]string) string` | 输出 Markdown 格式表格 |
+| `K表格_输出CSV` | `func K表格_输出CSV(表头 []string, 行数据 [][]string) string` | 输出 CSV 格式 |
+| `K表格_输出TSV` | `func K表格_输出TSV(表头 []string, 行数据 [][]string) string` | 输出 TSV 格式（制表符分隔） |
+| `K表格_输出JSON` | `func K表格_输出JSON(表头 []string, 行数据 [][]string) string` | 输出 JSON 数组格式 |
+| `K表格_输出HTML` | `func K表格_输出HTML(表头 []string, 行数据 [][]string) string` | 输出 HTML 表格格式 |
+
+### 数据导入
+
+| 函数 | 签名 | 说明 |
+|------|------|------|
+| `K表格_从CSV读取` | `func K表格_从CSV读取(csv文本 string) ([]string, [][]string, error)` | 从 CSV 文本解析表格 |
+| `K表格_从TSV读取` | `func K表格_从TSV读取(tsv文本 string) ([]string, [][]string)` | 从 TSV 文本解析表格 |
+
+### 数据操作
+
+| 函数 | 签名 | 说明 |
+|------|------|------|
+| `K表格_转置` | `func K表格_转置(表头 []string, 行数据 [][]string) ([]string, [][]string)` | 行列互换 |
+| `K表格_过滤行` | `func K表格_过滤行(行数据 [][]string, 条件 func(int, []string) bool) [][]string` | 按条件过滤行 |
+| `K表格_排序列` | `func K表格_排序列(行数据 [][]string, 列索引 int, 升序 bool) [][]string` | 按列排序 |
+| `K表格_取列` | `func K表格_取列(行数据 [][]string, 列索引 int) []string` | 提取指定列 |
+| `K表格_取行` | `func K表格_取行(行数据 [][]string, 行索引 int) []string` | 提取指定行 |
+| `K表格_行数` | `func K表格_行数(行数据 [][]string) int` | 获取行数 |
+| `K表格_列数` | `func K表格_列数(表头 []string) int` | 获取列数 |
+| `K表格_合并` | `func K表格_合并(行数据1 [][]string, 行数据2 [][]string) [][]string` | 合并两个表格 |
+| `K表格_去重` | `func K表格_去重(行数据 [][]string) [][]string` | 行数据去重 |
 
 ---
 
@@ -2037,7 +2101,7 @@ for _, c := range contours {
 | utils/H汇编 | 1 | 1 |
 | utils/IP | 1 | 1 |
 | utils/Int转换 | 1 | 2 |
-| utils/J校验 | 1 | 6 |
+| utils/J校验 | 1 | 24 |
 | utils/Post数据类 | 1 | 11 |
 | utils/Map | 1 | 4 |
 | utils/M目录 | 1 | 6 |
@@ -2067,7 +2131,7 @@ for _, c := range contours {
 | utils/T模板 | 1 | 5 |
 | utils/V数据校验 | 1 | 10 |
 | utils/J结构体合并 | 1 | 7 |
-| utils/K表格 | 1 | 7 |
+| utils/K表格 | 1 | 20 |
 | utils/F文件监控 | 1 | 9 |
 | utils/X消息总线 | 1 | 5 |
 | utils/H客户端 | 1 | 12 |
