@@ -2,13 +2,26 @@ package main
 
 import (
 	"fmt"
-	"time"
+	"os"
+	"strings"
 
 	"github.com/yuan71058/Efunc/class"
 	. "github.com/yuan71058/Efunc/utils"
 )
 
 func main() {
+	outPath := "demo_output.txt"
+	if len(os.Args) > 1 {
+		outPath = os.Args[1]
+	}
+	f, err := os.Create(outPath)
+	if err != nil {
+		fmt.Println("create output file error:", err)
+		os.Exit(1)
+	}
+	defer f.Close()
+	os.Stdout = f
+
 	示例_核心库()
 	示例_辅助()
 	示例_编码()
@@ -28,6 +41,7 @@ func main() {
 	示例_日志()
 	示例_环境变量()
 	示例_系统信息()
+	示例_IP()
 	示例_命令行()
 	示例_对象池()
 	示例_模板()
@@ -53,10 +67,10 @@ func 示例_核心库() {
 
 func 示例_辅助() {
 	fmt.Println("===== 辅助 =====")
-	fmt.Println("选择(true):", 选择(true, "是", "否"))
-	fmt.Println("选择(false):", 选择(false, "是", "否"))
-	fmt.Println("取随机数:", 取随机数(1, 100))
-	fmt.Println("取文本右边:", 取文本右边("Hello世界", 6))
+	fmt.Println("选择(true):", F_选择(true, "是", "否"))
+	fmt.Println("选择(false):", F_选择(false, "是", "否"))
+	fmt.Println("取随机数:", F_取随机数(1, 100))
+	fmt.Println("取文本右边:", F_取文本右边("Hello世界", 6))
 	fmt.Println()
 }
 
@@ -64,12 +78,12 @@ func 示例_编码() {
 	fmt.Println("===== B编码 =====")
 	fmt.Println("URL编码:", B编码_URL编码("go语言"))
 	fmt.Println("URL解码:", B编码_URL解码("go%E8%AF%AD%E8%A8%80"))
-	fmt.Println("Base64编码:", B编码_Base64编码([]byte("hello world")))
-	fmt.Println("Base64解码:", string(B编码_Base64解码("aGVsbG8gd29ybGQ=")))
-	fmt.Println("Hex编码:", B编码_Hex编码([]byte{0x12, 0x34, 0xab}))
-	fmt.Println("Hex解码:", B编码_Hex解码("1234ab"))
-	fmt.Println("HTML转义:", B编码_HTML转义("<script>alert('xss')</script>"))
-	fmt.Println("HTML反转义:", B编码_HTML反转义("&lt;script&gt;"))
+	fmt.Println("Base64编码:", B编码_BASE64编码([]byte("hello world")))
+	fmt.Println("Base64解码:", string(B编码_BASE64解码("aGVsbG8gd29ybGQ=")))
+	fmt.Println("十六进制编码:", B编码_十六进制编码([]byte{0x12, 0x34, 0xab}))
+	fmt.Println("十六进制解码:", B编码_十六进制解码("1234ab"))
+	fmt.Println("HTML编码:", B编码_HTML编码("<script>alert('xss')</script>"))
+	fmt.Println("HTML解码:", B编码_HTML解码("&lt;script&gt;"))
 	fmt.Println("文本到USC2:", B编码_文本到USC2("中文"))
 	fmt.Println("usc2到文本:", B编码_usc2到文本("\\u4e2d\\u6587"))
 	fmt.Println("文本到Unicode:", B编码_文本到Unicode("AB"))
@@ -108,9 +122,9 @@ func 示例_文本() {
 	fmt.Println("取右边:", W文本_取右边("Hello World", 5))
 	fmt.Println("取出中间文本:", W文本_取出中间文本("[start]hello[end]", "[start]", "[end]"))
 	fmt.Println("取行数:", W文本_取行数("第一行\n第二行\n第三行"))
-	fmt.Println("是否包含:", W文本_是否包含("Hello World", "World"))
-	fmt.Println("是否包含前缀:", W文本_是否包含前缀("Hello", "He"))
-	fmt.Println("是否包含后缀:", W文本_是否包含后缀("Hello", "llo"))
+	fmt.Println("是否包含关键字:", W文本_是否包含关键字("Hello World", "World"))
+	fmt.Println("是否包含前缀:", strings.HasPrefix("Hello", "He"))
+	fmt.Println("是否包含后缀:", strings.HasSuffix("Hello", "llo"))
 	fmt.Println("替换:", W文本_替换("Hello World", "World", "Go"))
 	fmt.Println()
 }
@@ -118,38 +132,44 @@ func 示例_文本() {
 func 示例_文件() {
 	fmt.Println("===== W文件 =====")
 	fmt.Println("是否存在:", W文件_是否存在("test.txt"))
-	内容 := "Hello Efunc!"
-	W文件_写("demo_test.txt", 内容)
-	fmt.Println("写入成功，读取:", W文件_读("demo_test.txt"))
-	fmt.Println("取扩展名:", W文件_取扩展名("test.go"))
+	内容 := []byte("Hello Efunc!")
+	W文件_写到文件("demo_test.txt", 内容)
+	fmt.Println("写入成功，读取:", W文件_读入文本("demo_test.txt"))
 	fmt.Println("取文件名:", W文件_取文件名("/path/to/test.go"))
-	fmt.Println("取目录:", W文件_取目录("/path/to/test.go"))
+	fmt.Println("取父目录:", W文件_取父目录("/path/to/test.go"))
 	fmt.Println()
 }
 
 func 示例_时间() {
 	fmt.Println("===== S时间 =====")
-	fmt.Println("取时间戳:", S时间_取时间戳())
-	fmt.Println("时间戳到文本:", S时间_时间戳到文本(S时间_取时间戳()))
-	fmt.Println("取当前时间:", S时间_取当前时间())
-	fmt.Println("取格式化时间:", S时间_取格式化时间("2006-01-02 15:04:05"))
+	fmt.Println("取现行时间戳:", S时间_取现行时间戳())
+	fmt.Println("时间戳格式化:", S时间_时间戳格式化("2006-01-02 15:04:05", S时间_取现行时间戳()))
+	fmt.Println("取现行时间:", S时间_取现行时间())
+	fmt.Println("取日期:", S时间_取日期())
+	fmt.Println("取时间:", S时间_取时间())
+	fmt.Println("取星期:", S时间_取星期())
+	fmt.Println("是否闰年(2024):", S时间_是否闰年(2024))
+	fmt.Println("月份天数(2024-2):", S时间_取月份天数(2024, 2))
+	fmt.Println("秒转时间文本:", S时间_秒转时间文本(3661))
+	网络时间 := S时间_取网络时间文本("")
+	if 网络时间 != "" {
+		fmt.Println("网络时间:", 网络时间)
+		fmt.Println("本地与网络时差(秒):", S时间_取本地与网络时差(""))
+	}
 	fmt.Println()
 }
 
 func 示例_数组() {
 	fmt.Println("===== S数组 =====")
-	fmt.Println("去重:", S数组_去重([]string{"a", "b", "a", "c"}))
-	fmt.Println("是否包含:", S数组_是否包含([]string{"a", "b", "c"}, "b"))
-	fmt.Println("合并:", S数组_合并([]string{"a"}, []string{"b", "c"}))
+	fmt.Println("去重:", S数组_去重复([]string{"a", "b", "a", "c"}))
+	fmt.Println("是否包含:", S数组_是否存在([]string{"a", "b", "c"}, "b"))
+	fmt.Println("合并文本:", S数组_合并文本([]string{"a", "b", "c"}, ","))
 	fmt.Println()
 }
 
 func 示例_正则() {
 	fmt.Println("===== Z正则 =====")
-	fmt.Println("是否匹配:", Z正则_是否匹配(`\d+`, "abc123"))
-	fmt.Println("取匹配文本:", Z正则_取匹配文本(`\d+`, "abc123def456"))
-	fmt.Println("取所有匹配:", Z正则_取所有匹配(`\d+`, "abc123def456"))
-	fmt.Println("替换:", Z正则_替换(`\d+`, "abc123", "NUM"))
+	fmt.Println("取全部匹配子文本:", Z正则_取全部匹配子文本("abc123def456", `\d+`))
 	fmt.Println()
 }
 
@@ -174,7 +194,7 @@ func 示例_类型转换() {
 	fmt.Println("到整数:", C类型_到整数("456"))
 	fmt.Println("到整数64:", C类型_到整数64("789"))
 	fmt.Println("到浮点数:", C类型_到浮点数("3.14"))
-	fmt.Println("到布尔值:", C类型_到布尔值("true"))
+	fmt.Println("到逻辑型:", C类型_到逻辑型("true"))
 	fmt.Println()
 }
 
@@ -227,7 +247,7 @@ func 示例_配置() {
 		"port": 8080,
 		"debug": true
 	}`
-	W文件_写("demo_config.json", 配置内容)
+	W文件_写到文件("demo_config.json", []byte(配置内容))
 	v, err := P配置_从文件读取("demo_config.json")
 	if err != nil {
 		fmt.Println("读取配置失败:", err)
@@ -254,10 +274,10 @@ func 示例_日志() {
 }
 
 func 示例_环境变量() {
-	fmt.Println("===== K环境变量 =====")
-	K环境变量_设置("EFUNC_TEST", "hello")
-	fmt.Println("取环境变量:", K环境变量_取("EFUNC_TEST"))
-	fmt.Println("是否存在:", K环境变量_是否存在("EFUNC_TEST"))
+	fmt.Println("===== K环境 =====")
+	K环境_设置值("EFUNC_TEST", "hello")
+	fmt.Println("取环境变量:", K环境_取值("EFUNC_TEST"))
+	fmt.Println("是否存在:", K环境_是否存在("EFUNC_TEST"))
 	fmt.Println()
 }
 
@@ -268,31 +288,45 @@ func 示例_系统信息() {
 		fmt.Println("CPU型号:", cpu信息[0].ModelName)
 		fmt.Println("CPU核心数:", cpu信息[0].Cores)
 	}
+	逻辑核心, _ := X系统_取CPU核心数()
+	fmt.Println("逻辑核心数:", 逻辑核心)
+	物理核心, _ := X系统_取CPU物理核心数()
+	fmt.Println("物理核心数:", 物理核心)
 	内存信息, _ := X系统_取内存信息()
 	fmt.Printf("总内存: %.0f MB\n", float64(内存信息.Total)/1024/1024)
 	fmt.Printf("可用内存: %.0f MB\n", float64(内存信息.Available)/1024/1024)
+	交换区, _ := X系统_取交换区信息()
+	fmt.Printf("交换区总量: %.0f MB\n", float64(交换区.Total)/1024/1024)
 	主机信息, _ := X系统_取主机信息()
 	fmt.Println("主机名:", 主机信息.Hostname)
 	fmt.Println("操作系统:", 主机信息.OS)
+	fmt.Println("系统架构:", X系统_取系统架构())
+	fmt.Println("操作系统类型:", X系统_取操作系统类型())
+	fmt.Println("是否64位:", X系统_是否64位系统())
+	fmt.Println("Go版本:", X系统_取Go版本())
+	开机时间, _ := X系统_取开机时间()
+	fmt.Println("开机时长(秒):", 开机时间)
+	磁盘列表, _ := X系统_取磁盘信息()
+	fmt.Println("磁盘分区数:", len(磁盘列表))
+	磁盘IO, _ := X系统_取磁盘IO信息()
+	fmt.Println("磁盘IO设备数:", len(磁盘IO))
+	fmt.Println("当前进程ID:", X系统_取当前进程ID())
 	fmt.Println()
 }
 
 func 示例_命令行() {
 	fmt.Println("===== M命令行 =====")
-	fmt.Println("取参数数量:", M命令行_取参数数量())
-	fmt.Println("取程序路径:", M命令行_取程序路径())
+	fmt.Println("取程序名:", M命令行_取程序名())
+	fmt.Println("取剩余参数:", M命令行_取剩余参数())
 	fmt.Println()
 }
 
 func 示例_对象池() {
 	fmt.Println("===== P对象池 =====")
-	pool := P对象池_创建(func() interface{} {
-		return fmt.Sprintf("对象_%d", time.Now().UnixNano())
-	})
-	obj := P对象池_获取(pool)
-	fmt.Println("获取对象:", obj)
-	P对象池_归还(pool, obj)
-	fmt.Println("对象已归还")
+	buf := P对象池_获取()
+	fmt.Println("获取缓冲区:", buf)
+	P对象池_放回(buf)
+	fmt.Println("缓冲区已放回")
 	fmt.Println()
 }
 
@@ -300,12 +334,12 @@ func 示例_模板() {
 	fmt.Println("===== T模板 =====")
 	模板文本 := "你好，{{.Name}}！今年{{.Age}}岁。"
 	数据 := map[string]interface{}{"Name": "张三", "Age": 25}
-	结果, err := T模板_渲染(模板文本, 数据)
+	结果, err := T模板_执行(模板文本, 数据)
 	if err != nil {
-		fmt.Println("渲染失败:", err)
+		fmt.Println("执行失败:", err)
 		return
 	}
-	fmt.Println("渲染结果:", 结果)
+	fmt.Println("执行结果:", 结果)
 	fmt.Println()
 }
 
@@ -340,12 +374,12 @@ func 示例_结构体合并() {
 
 func 示例_日期解析() {
 	fmt.Println("===== R日期解析 =====")
-	时间, err := R日期_解析("2024-01-15 10:30:00")
+	时间, err := R日期_智能解析("2024-01-15 10:30:00")
 	if err != nil {
 		fmt.Println("解析失败:", err)
 		return
 	}
-	fmt.Println("解析结果:", 时间.Format("2006-01-02 15:04:05"))
+	fmt.Println("解析结果:", R日期_到文本(时间, "2006-01-02 15:04:05"))
 	fmt.Println()
 }
 
@@ -361,6 +395,21 @@ func 示例_队列() {
 	fmt.Println("弹出:", val, ok)
 	val, ok = 队列.T弹出队列()
 	fmt.Println("弹出:", val, ok)
+	fmt.Println()
+}
+
+func 示例_IP() {
+	fmt.Println("===== IP =====")
+	fmt.Println("10进制转IP:", IP_10进制转IP(3232235777))
+	fmt.Println("IP转10进制:", IP_IP转10进制("192.168.1.1"))
+	fmt.Println("内网IP列表:", IP_取内网IP())
+	fmt.Println("首选内网IP:", IP_取首选内网IP())
+	fmt.Println("是否内网IP(192.168.1.1):", IP_是否内网IP("192.168.1.1"))
+	fmt.Println("是否内网IP(8.8.8.8):", IP_是否内网IP("8.8.8.8"))
+	fmt.Println("是否有效IP(192.168.1.1):", IP_是否有效IP("192.168.1.1"))
+	fmt.Println("是否有效IP(abc):", IP_是否有效IP("abc"))
+	fmt.Println("MAC地址:", IP_取MAC地址())
+	fmt.Println("Ping测试(baidu.com:80):", IP_Ping测试("baidu.com", 80, 3000))
 	fmt.Println()
 }
 

@@ -207,11 +207,11 @@ func W网页_Cookie合并更新(旧Cookie, 新Cookie string) string {
 
 	旧Cookie = ""
 	for _, cookie := range 局_新Cookie组 {
-		if 取文本右边(cookie, 8) != "=deleted" {
+		if F_取文本右边(cookie, 8) != "=deleted" {
 			旧Cookie += cookie + "; "
 		}
 	}
-	旧Cookie = 取文本左边(旧Cookie, len(旧Cookie)-2)
+	旧Cookie = F_取文本左边(旧Cookie, len(旧Cookie)-2)
 	旧Cookie = W文本_去重复文本(旧Cookie, "; ")
 
 	return 旧Cookie
@@ -246,7 +246,7 @@ func 内部_数组成员是否存在1(数组 []string, 要判断值 string) bool
 func 内部_Cookie取值(Cookie string) string {
 	位置 := strings.Index(Cookie, "=")
 	if 位置 != -1 {
-		结果 := 取文本右边(Cookie, len(Cookie)-位置)
+		结果 := F_取文本右边(Cookie, len(Cookie)-位置)
 		return 结果
 	}
 	return ""
@@ -263,10 +263,10 @@ func 内部_Cookie取值(Cookie string) string {
 func 内部_Cookie取名(Cookie string) string {
 	位置 := strings.Index(Cookie, "=")
 	if 位置 != -1 {
-		结果 := 取文本左边(Cookie, 位置-1)
-		return 删首尾空(结果)
+		结果 := F_取文本左边(Cookie, 位置-1)
+		return F_删首尾空(结果)
 	}
-	return 删首尾空(Cookie)
+	return F_删首尾空(Cookie)
 }
 
 // 内部_数组成员是否存在_文本 在字符串数组中查找指定值，返回其索引位置。

@@ -1,3 +1,5 @@
+//go:build opencv
+
 package utils
 
 import (

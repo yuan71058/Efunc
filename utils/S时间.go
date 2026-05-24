@@ -1,7 +1,10 @@
 package utils
 
 import (
+	"encoding/json"
 	"fmt"
+	"net"
+	"net/http"
 	"strings"
 	"time"
 )
@@ -195,4 +198,185 @@ func S时间_秒转时间文本(秒 int64) string {
 	}
 
 	return result
+}
+
+// S时间_取网络时间 通过 NTP 协议从指定 NTP 服务器获取网络标准时间。
+// 使用 SNTP 协议（RFC 4330）与 NTP 服务器通信，获取精确的网络时间。
+//
+// 参数:
+//   - 服务器: NTP 服务器地址，如 "ntp.aliyun.com"、"time.windows.com"；空字符串使用默认服务器
+//
+// 返回:
+//   - time.Time: 网络标准时间；获取失败返回零值
+func S时间_取网络时间(服务器 string) time.Time {
+	if 服务器 == "" {
+		服务器 = "ntp.aliyun.com"
+	}
+	conn, err := net.DialTimeout("udp", 服务器+":123", 5*time.Second)
+	if err != nil {
+		return time.Time{}
+	}
+	defer conn.Close()
+	conn.SetDeadline(time.Now().Add(5 * time.Second))
+
+	req := make([]byte, 48)
+	req[0] = 0x1b
+	_, err = conn.Write(req)
+	if err != nil {
+		return time.Time{}
+	}
+
+	resp := make([]byte, 48)
+	_, err = conn.Read(resp)
+	if err != nil {
+		return time.Time{}
+	}
+
+	sec := uint64(resp[40])<<24 | uint64(resp[41])<<16 | uint64(resp[42])<<8 | uint64(resp[43])
+	frac := uint64(resp[44])<<24 | uint64(resp[45])<<16 | uint64(resp[46])<<8 | uint64(resp[47])
+
+	nsec := frac * 1e9 / (1 << 32)
+	unixSec := int64(sec) - 2208988800
+	return time.Unix(unixSec, int64(nsec))
+}
+
+// S时间_取网络时间戳 通过 NTP 协议获取网络标准时间的 10 位秒级时间戳。
+//
+// 参数:
+//   - 服务器: NTP 服务器地址；空字符串使用默认服务器
+//
+// 返回:
+//   - int64: 10 位秒级时间戳；获取失败返回 0
+func S时间_取网络时间戳(服务器 string) int64 {
+	t := S时间_取网络时间(服务器)
+	if t.IsZero() {
+		return 0
+	}
+	return t.Unix()
+}
+
+// S时间_取网络时间文本 通过 NTP 协议获取网络标准时间并格式化为文本。
+//
+// 参数:
+//   - 服务器: NTP 服务器地址；空字符串使用默认服务器
+//
+// 返回:
+//   - string: 格式为 "2006-01-02 15:04:05" 的网络时间字符串；获取失败返回空字符串
+func S时间_取网络时间文本(服务器 string) string {
+	t := S时间_取网络时间(服务器)
+	if t.IsZero() {
+		return ""
+	}
+	return t.Format(base_format)
+}
+
+// S时间_取HTTP网络时间 通过 HTTP 请求从世界时间 API 获取网络时间。
+// 适用于 NTP 端口被封锁但 HTTP 可用的网络环境。
+//
+// 返回:
+//   - time.Time: 网络标准时间；获取失败返回零值
+func S时间_取HTTP网络时间() time.Time {
+	type timeAPIResp struct {
+		Unixtime int64  `json:"unixtime"`
+		Datetime string `json:"datetime"`
+	}
+	resp, err := http.DefaultClient.Get("http://worldtimeapi.org/api/timezone/Asia/Shanghai")
+	if err != nil {
+		return time.Time{}
+	}
+	defer resp.Body.Close()
+	if resp.StatusCode != 200 {
+		return time.Time{}
+	}
+	var result timeAPIResp
+	if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
+		return time.Time{}
+	}
+	if result.Unixtime > 0 {
+		return time.Unix(result.Unixtime, 0)
+	}
+	return time.Time{}
+}
+
+// S时间_取本地与网络时差 获取本地时间与网络时间的差值（秒）。
+// 正值表示本地时间快于网络时间，负值表示本地时间慢于网络时间。
+//
+// 参数:
+//   - 服务器: NTP 服务器地址；空字符串使用默认服务器
+//
+// 返回:
+//   - int64: 时差（秒）；获取失败返回 0
+func S时间_取本地与网络时差(服务器 string) int64 {
+	网络时间 := S时间_取网络时间(服务器)
+	if 网络时间.IsZero() {
+		return 0
+	}
+	return time.Now().Unix() - 网络时间.Unix()
+}
+
+// S时间_取日期 获取当前日期，格式为 "2006-01-02"。
+//
+// 返回:
+//   - string: 当前日期字符串
+func S时间_取日期() string {
+	return time.Now().Format("2006-01-02")
+}
+
+// S时间_取时间 获取当前时间，格式为 "15:04:05"。
+//
+// 返回:
+//   - string: 当前时间字符串
+func S时间_取时间() string {
+	return time.Now().Format("15:04:05")
+}
+
+// S时间_取星期 获取当前日期是星期几的中文名称。
+//
+// 返回:
+//   - string: 星期名称（星期日~星期六）
+func S时间_取星期() string {
+	星期 := []string{"星期日", "星期一", "星期二", "星期三", "星期四", "星期五", "星期六"}
+	return 星期[time.Now().Weekday()]
+}
+
+// S时间_计算时间差 计算两个时间戳之间的时间差，返回中文可读文本。
+//
+// 参数:
+//   - 开始时间戳: 10 位秒级时间戳
+//   - 结束时间戳: 10 位秒级时间戳
+//
+// 返回:
+//   - string: 中文格式的时间差文本（如 "1时2分3秒"）
+func S时间_计算时间差(开始时间戳, 结束时间戳 int64) string {
+	差值 := 结束时间戳 - 开始时间戳
+	if 差值 < 0 {
+		差值 = -差值
+	}
+	return S时间_秒转时间文本(差值)
+}
+
+// S时间_是否闰年 判断指定年份是否为闰年。
+//
+// 参数:
+//   - 年: 年份，如 2024
+//
+// 返回:
+//   - bool: 闰年返回 true，平年返回 false
+func S时间_是否闰年(年 int) bool {
+	return 年%4 == 0 && (年%100 != 0 || 年%400 == 0)
+}
+
+// S时间_取月份天数 获取指定年份和月份的天数。
+//
+// 参数:
+//   - 年: 年份，如 2024
+//   - 月: 月份（1-12）
+//
+// 返回:
+//   - int: 该月天数；月份无效返回 0
+func S时间_取月份天数(年, 月 int) int {
+	if 月 < 1 || 月 > 12 {
+		return 0
+	}
+	return time.Date(年, time.Month(月+1), 0, 0, 0, 0, 0, time.UTC).Day()
 }

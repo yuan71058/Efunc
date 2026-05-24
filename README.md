@@ -6,10 +6,10 @@
 
 中文命名的工具函数库，涵盖编码转换、加密校验、文本处理、文件操作、网络请求、并发安全数据结构、数据库操作、权限管理等常用功能
 
-[![Version](https://img.shields.io/badge/Version-v2.0.0-blue?style=flat-square)](https://github.com/yuan71058/Efunc/releases)
+[![Version](https://img.shields.io/badge/Version-v2.1.0-blue?style=flat-square)](https://github.com/yuan71058/Efunc/releases)
 [![Go Version](https://img.shields.io/badge/Go-%3E%3D1.18-00ADD8?style=flat-square&logo=go)](https://go.dev/)
 [![License](https://img.shields.io/badge/License-MIT-green?style=flat-square)](LICENSE)
-[![Functions](https://img.shields.io/badge/Functions-500%2B-orange?style=flat-square)](API_Reference.md)
+[![Functions](https://img.shields.io/badge/Functions-650%2B-orange?style=flat-square)](API_Reference.md)
 [![Go Reference](https://pkg.go.dev/badge/github.com/yuan71058/Efunc.svg)](https://pkg.go.dev/github.com/yuan71058/Efunc)
 
 [快速开始](#-快速开始) · [模块一览](#-模块一览) · [命名规则](#-命名规则) · [更新日志](#-更新日志)
@@ -36,7 +36,7 @@
 ## 📥 安装
 
 ```bash
-go get -u github.com/yuan71058/Efunc@v2.0.0
+go get -u github.com/yuan71058/Efunc@v2.1.0
 ```
 
 ## 🚀 快速开始
@@ -94,7 +94,7 @@ import (
 | `L_队列` | 线程安全队列 |
 | `L_队列泛型` | 泛型线程安全队列 |
 
-### 🔧 utils — 工具函数（600+）
+### 🔧 utils — 工具函数（650+）
 
 #### 基础模块
 
@@ -242,6 +242,37 @@ import (
 | [Code Wiki](Code_Wiki.md) | 项目架构与模块详解 |
 
 ## 📋 更新日志
+
+### v2.1.0 (2026-05-24)
+
+**🌐 IP 模块全面增强**
+- 新增 `IP_取内网IP` — 获取本机所有内网 IPv4 地址
+- 新增 `IP_取首选内网IP` — 获取首选局域网 IP（跳过链路本地地址）
+- 新增 `IP_取外网IP` — 通过公共 API 获取公网 IPv4 地址
+- 新增 `IP_取外网IP详细信息` — 获取外网 IP 地理位置/ISP JSON 信息
+- 新增 `IP_IP转10进制` — 点分十进制 IP 转整数
+- 新增 `IP_是否内网IP` — 判断是否为私有地址
+- 新增 `IP_是否有效IP` — 验证 IPv4/IPv6 格式
+- 新增 `IP_取MAC地址` — 获取本机全部网络接口 MAC 地址
+- 新增 `IP_Ping测试` — TCP 连通性测试
+
+**⏱ 网络时间功能**
+- 新增 `S时间_取网络时间` — 通过 NTP 协议获取网络标准时间
+- 新增 `S时间_取网络时间戳` — 通过 NTP 获取 10 位时间戳
+- 新增 `S时间_取网络时间文本` — 通过 NTP 获取格式化时间文本
+- 新增 `S时间_取HTTP网络时间` — HTTP 方式获取网络时间（NTP 备选）
+
+**💻 系统信息模块扩展**
+- 新增 `X系统_取CPU物理核心数` / `X系统_取总CPU使用率`
+- 新增 `X系统_取磁盘IO信息` / `X系统_取网络IO信息`
+- 新增 `X系统_取系统负载` — Load1/Load5/Load15
+- 新增 `X系统_取进程列表/信息/CPU占用/内存占用/进程名`
+- 新增 `X系统_取当前进程ID/信息`
+- 新增 `X系统_是否64位系统` / `X系统_取系统架构` / `X系统_取操作系统类型` / `X系统_取逻辑处理器数` / `X系统_取Go版本`
+
+**📝 其他改进**
+- 辅助函数模块重命名为 `F_helper.go`，函数名统一加 `F_` 前缀以符合 Go 导出规则
+- 函数总数增长至 650+
 
 ### v2.0.0 (2026-05-24)
 

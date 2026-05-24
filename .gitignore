@@ -8,3 +8,4 @@
 *.out
 *.prof
 vendor/
+utils/demo_output.txt

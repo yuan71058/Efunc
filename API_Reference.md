@@ -335,20 +335,20 @@ D多项选择(1, []string{"a","b","c"}, "x") // "b"
 
 ## 2.2 辅助
 
-> 源文件：`utils/辅助.go`
+> 源文件：`utils/F_helper.go`
 
 | 函数 | 签名 | 说明 |
 |------|------|------|
-| `选择` | `func 选择(逻辑 bool, 真返回参数, 假返回参数 interface{}) interface{}` | 三元选择（非泛型版） |
-| `取随机数` | `func 取随机数(min, max int) int` | [min, max] 范围随机整数 |
-| `取文本右边` | `func 取文本右边(text string, n int) string` | 取右侧 N 个字节字符；超过长度返回原文本 |
-| `取文本左边` | `func 取文本左边(text string, n int) string` | 取左侧 N 个字节字符；超过长度返回原文本 |
-| `加入成员` | `func 加入成员(数组 []string, 成员 string) []string` | 向数组追加成员 |
-| `删首尾空` | `func 删首尾空(text string) string` | TrimSpace 封装 |
-| `取文本长度` | `func 取文本长度(text string) int` | 取字节长度（中文占 3 字节） |
-| `分割文本` | `func 分割文本(原文本 string, 分割符 string) []string` | 按分隔符分割文本 |
+| `F_选择` | `func F_选择(逻辑 bool, 真返回参数, 假返回参数 interface{}) interface{}` | 三元选择（非泛型版） |
+| `F_取随机数` | `func F_取随机数(min, max int) int` | [min, max] 范围随机整数 |
+| `F_取文本右边` | `func F_取文本右边(text string, n int) string` | 取右侧 N 个字节字符；超过长度返回原文本 |
+| `F_取文本左边` | `func F_取文本左边(text string, n int) string` | 取左侧 N 个字节字符；超过长度返回原文本 |
+| `F_加入成员` | `func F_加入成员(数组 []string, 成员 string) []string` | 向数组追加成员 |
+| `F_删首尾空` | `func F_删首尾空(text string) string` | TrimSpace 封装 |
+| `F_取文本长度` | `func F_取文本长度(text string) int` | 取字节长度（中文占 3 字节） |
+| `F_分割文本` | `func F_分割文本(原文本 string, 分割符 string) []string` | 按分隔符分割文本 |
 
-**注意**：`取文本右边`/`取文本左边` 按字节截取，中文可能截断。中文安全截取请用 `W文本_取右边`/`W文本_取左边`。
+**注意**：`F_取文本右边`/`F_取文本左边` 按字节截取，中文可能截断。中文安全截取请用 `W文本_取右边`/`W文本_取左边`。
 
 ---
 
@@ -569,11 +569,49 @@ Float64除float64(1.0, 3.0, 4)  // 0.3333
 
 > 源文件：`utils/IP.go`
 
+### IP 地址转换
+
 | 函数 | 签名 | 说明 |
 |------|------|------|
 | `IP_10进制转IP` | `func IP_10进制转IP(decimal int) string` | 10 进制整数转点分十进制 IP |
+| `IP_IP转10进制` | `func IP_IP转10进制(ip string) int` | 点分十进制 IP 转 10 进制整数 |
 
-**示例**：`IP_10进制转IP(3232235777)` → `"192.168.1.1"`
+### 内网/外网 IP
+
+| 函数 | 签名 | 说明 |
+|------|------|------|
+| `IP_取内网IP` | `func IP_取内网IP() []string` | 获取本机所有内网 IPv4 地址 |
+| `IP_取首选内网IP` | `func IP_取首选内网IP() string` | 获取首选内网 IPv4 地址（跳过链路本地） |
+| `IP_取外网IP` | `func IP_取外网IP() string` | 通过公共 API 获取公网 IPv4 地址 |
+| `IP_取外网IP详细信息` | `func IP_取外网IP详细信息() string` | 获取外网 IP 的地理位置/ISP 等 JSON 信息 |
+
+### IP 验证与判断
+
+| 函数 | 签名 | 说明 |
+|------|------|------|
+| `IP_是否内网IP` | `func IP_是否内网IP(ip string) bool` | 判断是否为私有地址（10/172.16/192.168） |
+| `IP_是否有效IP` | `func IP_是否有效IP(ip string) bool` | 判断字符串是否为有效 IPv4/IPv6 |
+
+### MAC 地址与连通性
+
+| 函数 | 签名 | 说明 |
+|------|------|------|
+| `IP_取MAC地址` | `func IP_取MAC地址() map[string]string` | 获取本机所有网络接口的 MAC 地址 |
+| `IP_Ping测试` | `func IP_Ping测试(主机 string, 端口 int, 超时毫秒 int) bool` | TCP 连通性测试（非 ICMP） |
+
+**示例**：
+
+```go
+IP_10进制转IP(3232235777)                    // "192.168.1.1"
+IP_IP转10进制("192.168.1.1")                 // 3232235777
+IP_取内网IP()                                 // ["192.168.1.100"]
+IP_取首选内网IP()                             // "192.168.1.100"
+IP_取外网IP()                                 // "123.45.67.89"
+IP_是否内网IP("192.168.1.1")                  // true
+IP_是否有效IP("abc")                          // false
+IP_取MAC地址()                                // map["以太网":"4c:ed:fb:6a:ed:ae"]
+IP_Ping测试("baidu.com", 80, 3000)            // true
+```
 
 ---
 
@@ -792,6 +830,26 @@ S数组_是否存在([]string{"a","b"}, "b")      // true
 ```go
 S时间_秒转时间文本(3661) // "1时1分1秒"
 S时间_时间戳格式化("Y-m-d H:i:s", 0) // 当前时间
+```
+
+### 网络时间
+
+> 支持 NTP 协议和 HTTP API 两种方式获取网络标准时间，用于校准本地时钟。
+
+| 函数 | 签名 | 说明 |
+|------|------|------|
+| `S时间_取网络时间` | `func S时间_取网络时间(服务器 string) time.Time` | 通过 NTP 获取网络时间（默认 ntp.aliyun.com） |
+| `S时间_取网络时间戳` | `func S时间_取网络时间戳(服务器 string) int64` | 通过 NTP 获取 10 位网络时间戳 |
+| `S时间_取网络时间文本` | `func S时间_取网络时间文本(服务器 string) string` | 通过 NTP 获取格式化的网络时间文本 |
+| `S时间_取HTTP网络时间` | `func S时间_取HTTP网络时间() time.Time` | 通过 HTTP API 获取网络时间（worldtimeapi.org） |
+
+**示例**：
+
+```go
+nt := S时间_取网络时间("")                     // 从 ntp.aliyun.com 获取
+S时间_取网络时间戳("ntp.ntsc.ac.cn")           // 从国家授时中心获取
+S时间_取网络时间文本("time.windows.com")        // "2026-05-24 21:12:05"
+httpt := S时间_取HTTP网络时间()                 // HTTP 方式（NTP 被封时备用）
 ```
 
 ---
@@ -1364,27 +1422,84 @@ E邮件_发送TLS(
 
 > 源文件：`utils/X系统信息.go` | 依赖：`github.com/shirou/gopsutil/v3` | 用途：获取 CPU、内存、磁盘、网络等系统指标
 
+### CPU
+
 | 函数 | 签名 | 说明 |
 |------|------|------|
 | `X系统_取CPU信息` | `func X系统_取CPU信息() ([]cpu.InfoStat, error)` | 获取 CPU 信息（型号、核心数等） |
 | `X系统_取CPU核心数` | `func X系统_取CPU核心数() (int, error)` | 获取逻辑核心数 |
-| `X系统_取CPU使用率` | `func X系统_取CPU使用率(间隔 int) ([]float64, error)` | 获取 CPU 使用率（间隔单位：秒） |
-| `X系统_取内存信息` | `func X系统_取内存信息() (*mem.VirtualMemoryStat, error)` | 获取内存使用情况 |
+| `X系统_取CPU物理核心数` | `func X系统_取CPU物理核心数() (int, error)` | 获取物理核心数 |
+| `X系统_取CPU使用率` | `func X系统_取CPU使用率(间隔 int) ([]float64, error)` | 获取各核心 CPU 使用率（间隔单位：秒） |
+| `X系统_取总CPU使用率` | `func X系统_取总CPU使用率(间隔 int) (float64, error)` | 获取总体 CPU 使用率 |
+
+### 内存
+
+| 函数 | 签名 | 说明 |
+|------|------|------|
+| `X系统_取内存信息` | `func X系统_取内存信息() (*mem.VirtualMemoryStat, error)` | 获取内存使用情况（总/已用/可用） |
 | `X系统_取交换区信息` | `func X系统_取交换区信息() (*mem.SwapMemoryStat, error)` | 获取 Swap 使用情况 |
+
+### 磁盘
+
+| 函数 | 签名 | 说明 |
+|------|------|------|
 | `X系统_取磁盘信息` | `func X系统_取磁盘信息() ([]disk.PartitionStat, error)` | 获取磁盘分区列表 |
 | `X系统_取磁盘使用量` | `func X系统_取磁盘使用量(路径 string) (*disk.UsageStat, error)` | 获取指定路径磁盘使用量 |
-| `X系统_取主机信息` | `func X系统_取主机信息() (*host.InfoStat, error)` | 获取主机名、OS、内核版本等 |
+| `X系统_取磁盘IO信息` | `func X系统_取磁盘IO信息() (map[string]disk.IOCountersStat, error)` | 获取磁盘 IO 统计信息 |
+
+### 网络
+
+| 函数 | 签名 | 说明 |
+|------|------|------|
 | `X系统_取网络接口信息` | `func X系统_取网络接口信息() ([]net.InterfaceStat, error)` | 获取网络接口列表 |
 | `X系统_取网络连接信息` | `func X系统_取网络连接信息() ([]net.ConnectionStat, error)` | 获取活动网络连接 |
+| `X系统_取网络IO信息` | `func X系统_取网络IO信息() ([]net.IOCountersStat, error)` | 获取网络 IO 统计信息 |
+
+### 主机
+
+| 函数 | 签名 | 说明 |
+|------|------|------|
+| `X系统_取主机信息` | `func X系统_取主机信息() (*host.InfoStat, error)` | 获取主机名、OS、内核版本等 |
 | `X系统_取开机时间` | `func X系统_取开机时间() (uint64, error)` | 获取系统开机时长（秒） |
+| `X系统_取系统负载` | `func X系统_取系统负载() (*load.AvgStat, error)` | 获取系统负载（Load1/Load5/Load15） |
+
+### 进程
+
+| 函数 | 签名 | 说明 |
+|------|------|------|
+| `X系统_取进程列表` | `func X系统_取进程列表() ([]*process.Process, error)` | 获取所有进程列表 |
+| `X系统_取进程信息` | `func X系统_取进程信息(pid int32) (*process.Process, error)` | 获取指定 PID 进程信息 |
+| `X系统_取当前进程ID` | `func X系统_取当前进程ID() int32` | 获取当前进程 PID |
+| `X系统_取当前进程信息` | `func X系统_取当前进程信息() (*process.Process, error)` | 获取当前进程详细信息 |
+| `X系统_取进程名` | `func X系统_取进程名(pid int32) string` | 获取指定 PID 的进程名 |
+| `X系统_取进程内存占用` | `func X系统_取进程内存占用(pid int32) float64` | 获取进程内存占用（MB） |
+| `X系统_取进程CPU占用` | `func X系统_取进程CPU占用(pid int32) float64` | 获取进程 CPU 使用率（%） |
+
+### 系统信息
+
+| 函数 | 签名 | 说明 |
+|------|------|------|
+| `X系统_是否64位系统` | `func X系统_是否64位系统() bool` | 判断是否为 64 位系统 |
+| `X系统_取系统架构` | `func X系统_取系统架构() string` | 获取系统架构（如 amd64） |
+| `X系统_取操作系统类型` | `func X系统_取操作系统类型() string` | 获取操作系统类型（如 windows） |
+| `X系统_取逻辑处理器数` | `func X系统_取逻辑处理器数() int` | 获取逻辑处理器数量 |
+| `X系统_取Go版本` | `func X系统_取Go版本() string` | 获取 Go 版本号 |
 
 **示例**：
 
 ```go
-cores, _ := X系统_取CPU核心数()        // 8
-memInfo, _ := X系统_取内存信息()        // &{Total:17179869184 Used:8589934592 ...}
-usage, _ := X系统_取磁盘使用量("C:\\")  // &{Total:500G Used:200G ...}
-hostInfo, _ := X系统_取主机信息()       // &{Hostname:MY-PC OS:windows ...}
+cpuInfo, _ := X系统_取CPU信息()              // CPU 型号和核心数
+cores, _ := X系统_取CPU核心数()               // 12
+physCores, _ := X系统_取CPU物理核心数()        // 6
+memInfo, _ := X系统_取内存信息()               // &{Total:40873MB ...}
+usage, _ := X系统_取磁盘使用量("C:\\")         // &{Total:500G Used:200G ...}
+hostInfo, _ := X系统_取主机信息()              // &{Hostname:MY-PC OS:windows ...}
+uptime, _ := X系统_取开机时间()                // 26817（秒）
+X系统_是否64位系统()                           // true
+X系统_取系统架构()                              // "amd64"
+X系统_取操作系统类型()                          // "windows"
+X系统_取Go版本()                               // "go1.25.5"
+X系统_取当前进程ID()                           // 7692
 ```
 
 ---
@@ -2140,7 +2255,7 @@ for _, c := range contours {
 | utils/C程序 | 1 | 12 |
 | utils/Float64转换 | 1 | 11 |
 | utils/H汇编 | 1 | 1 |
-| utils/IP | 1 | 1 |
+| utils/IP | 1 | 10 |
 | utils/Int转换 | 1 | 2 |
 | utils/J校验 | 1 | 24 |
 | utils/Post数据类 | 1 | 11 |
@@ -2148,7 +2263,7 @@ for _, c := range contours {
 | utils/M目录 | 1 | 6 |
 | utils/Rsa | 1 | 7 |
 | utils/S数组 | 1 | 16 |
-| utils/S时间 | 1 | 9 |
+| utils/S时间 | 1 | 13 |
 | utils/T图片 | 1 | 42 |
 | utils/W文件 | 1 | 15 |
 | utils/W文本 | 1 | 42 |
@@ -2160,7 +2275,7 @@ for _, c := range contours {
 | utils/C类型转换 | 1 | 14 |
 | utils/P配置 | 1 | 15 |
 | utils/E邮件 | 1 | 3 |
-| utils/X系统信息 | 1 | 11 |
+| utils/X系统信息 | 1 | 28 |
 | utils/D定时 | 1 | 7 |
 | utils/G协程池 | 1 | 10 |
 | utils/L日志 | 1 | 11 |
@@ -2183,4 +2298,4 @@ for _, c := range contours {
 | utils/C窗口 | 1 | 24 |
 | utils/C进程 | 1 | 15 |
 | utils/OCV视觉 | 1 | 67 |
-| **合计** | **54** | **600+** |
+| **合计** | **54** | **650+** |
