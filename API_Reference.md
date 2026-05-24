@@ -639,17 +639,114 @@ S时间_时间戳格式化("Y-m-d H:i:s", 0) // 当前时间
 
 ## 2.16 T图片
 
-> 源文件：`utils/T图片.go` | 依赖：`github.com/skip2/go-qrcode`
+> 源文件：`utils/T图片.go` | 依赖：`github.com/disintegration/imaging` + `github.com/skip2/go-qrcode`
+
+### 读取与保存
 
 | 函数 | 签名 | 说明 |
 |------|------|------|
-| `T图片_生成二维码base64` | `func T图片_生成二维码base64(内容 string) string` | 生成 256px 二维码并返回 Base64 编码；失败返回空串 |
+| `T图片_读取` | `func T图片_读取(文件路径 string) (image.Image, error)` | 从文件读取图片（自动识别格式） |
+| `T图片_读取Base64` | `func T图片_读取Base64(base64文本 string) (image.Image, error)` | 从 Base64 字符串读取图片 |
+| `T图片_从字节读取` | `func T图片_从字节读取(数据 []byte) (image.Image, error)` | 从字节切片读取图片 |
+| `T图片_从读取器读取` | `func T图片_从读取器读取(读取器 io.Reader) (image.Image, string, error)` | 从 io.Reader 读取图片 |
+| `T图片_保存` | `func T图片_保存(图片 image.Image, 文件路径 string) error` | 保存图片（按扩展名自动选格式） |
+| `T图片_保存PNG` | `func T图片_保存PNG(图片 image.Image, 文件路径 string) error` | 保存为 PNG 格式 |
+| `T图片_保存JPEG` | `func T图片_保存JPEG(图片 image.Image, 文件路径 string, 质量 int) error` | 保存为 JPEG 格式（可设质量） |
+| `T图片_保存GIF` | `func T图片_保存GIF(图片 image.Image, 文件路径 string) error` | 保存为 GIF 格式 |
+
+### 信息获取
+
+| 函数 | 签名 | 说明 |
+|------|------|------|
+| `T图片_取宽度` | `func T图片_取宽度(图片 image.Image) int` | 获取图片宽度（像素） |
+| `T图片_取高度` | `func T图片_取高度(图片 image.Image) int` | 获取图片高度（像素） |
+| `T图片_取尺寸` | `func T图片_取尺寸(图片 image.Image) (int, int)` | 获取图片尺寸（宽, 高） |
+| `T图片_取边界` | `func T图片_取边界(图片 image.Image) image.Rectangle` | 获取图片边界矩形 |
+| `T图片_取像素颜色` | `func T图片_取像素颜色(图片 image.Image, x int, y int) color.Color` | 获取指定坐标像素颜色 |
+| `T图片_取像素RGBA` | `func T图片_取像素RGBA(图片 image.Image, x int, y int) (uint32, uint32, uint32, uint32)` | 获取指定坐标 RGBA 分量 |
+| `T图片_转Base64` | `func T图片_转Base64(图片 image.Image, 格式 string) (string, error)` | 转换为 Base64 编码字符串 |
+| `T图片_转DataURI` | `func T图片_转DataURI(图片 image.Image, 格式 string) (string, error)` | 转换为 Data URI 格式 |
+| `T图片_转字节` | `func T图片_转字节(图片 image.Image, 格式 string) ([]byte, error)` | 编码为字节切片 |
+
+### 变换（缩放/裁剪/旋转/翻转）
+
+| 函数 | 签名 | 说明 |
+|------|------|------|
+| `T图片_缩放` | `func T图片_缩放(图片 image.Image, 宽度 int, 高度 int) image.Image` | 缩放到指定尺寸（支持等比） |
+| `T图片_缩放到宽度` | `func T图片_缩放到宽度(图片 image.Image, 宽度 int) image.Image` | 等比缩放到指定宽度 |
+| `T图片_缩放到高度` | `func T图片_缩放到高度(图片 image.Image, 高度 int) image.Image` | 等比缩放到指定高度 |
+| `T图片_缩略图` | `func T图片_缩略图(图片 image.Image, 宽度 int, 高度 int) image.Image` | 生成缩略图（裁剪填充） |
+| `T图片_裁剪` | `func T图片_裁剪(图片 image.Image, 左 int, 上 int, 右 int, 下 int) image.Image` | 裁剪到指定矩形区域 |
+| `T图片_居中裁剪` | `func T图片_居中裁剪(图片 image.Image, 宽度 int, 高度 int) image.Image` | 从中心裁剪出指定尺寸 |
+| `T图片_旋转` | `func T图片_旋转(图片 image.Image, 角度 float64) image.Image` | 顺时针旋转指定角度 |
+| `T图片_旋转90` | `func T图片_旋转90(图片 image.Image) image.Image` | 顺时针旋转 90° |
+| `T图片_旋转180` | `func T图片_旋转180(图片 image.Image) image.Image` | 旋转 180° |
+| `T图片_旋转270` | `func T图片_旋转270(图片 image.Image) image.Image` | 顺时针旋转 270° |
+| `T图片_水平翻转` | `func T图片_水平翻转(图片 image.Image) image.Image` | 左右镜像翻转 |
+| `T图片_垂直翻转` | `func T图片_垂直翻转(图片 image.Image) image.Image` | 上下镜像翻转 |
+
+### 效果（灰度/亮度/对比度/模糊/锐化）
+
+| 函数 | 签名 | 说明 |
+|------|------|------|
+| `T图片_灰度化` | `func T图片_灰度化(图片 image.Image) image.Image` | 转换为灰度图 |
+| `T图片_反色` | `func T图片_反色(图片 image.Image) image.Image` | 颜色取反（底片效果） |
+| `T图片_调整亮度` | `func T图片_调整亮度(图片 image.Image, 亮度 int) image.Image` | 调整亮度（-100~100） |
+| `T图片_调整对比度` | `func T图片_调整对比度(图片 image.Image, 对比度 int) image.Image` | 调整对比度（-100~100） |
+| `T图片_调整饱和度` | `func T图片_调整饱和度(图片 image.Image, 饱和度 int) image.Image` | 调整饱和度（-100~100） |
+| `T图片_调整色相` | `func T图片_调整色相(图片 image.Image, 色相 int) image.Image` | 调整色相（-180~180） |
+| `T图片_模糊` | `func T图片_模糊(图片 image.Image, 半径 float64) image.Image` | 高斯模糊 |
+| `T图片_锐化` | `func T图片_锐化(图片 image.Image, 强度 float64) image.Image` | 锐化处理 |
+| `T图片_伽马校正` | `func T图片_伽马校正(图片 image.Image, 伽马值 float64) image.Image` | 伽马校正 |
+
+### 合成与水印
+
+| 函数 | 签名 | 说明 |
+|------|------|------|
+| `T图片_添加水印` | `func T图片_添加水印(底图, 水印图 image.Image, 位置 string, 偏移X, 偏移Y int, 透明度 float64) image.Image` | 添加水印（5 个位置可选） |
+| `T图片_叠加` | `func T图片_叠加(底图, 上层图 image.Image, x, y int) image.Image` | 叠加图片 |
+| `T图片_叠加带透明度` | `func T图片_叠加带透明度(底图, 上层图 image.Image, x, y int, 透明度 float64) image.Image` | 带透明度叠加 |
+| `T图片_拼接水平` | `func T图片_拼接水平(图片列表 []image.Image) image.Image` | 水平拼接多张图片 |
+| `T图片_拼接垂直` | `func T图片_拼接垂直(图片列表 []image.Image) image.Image` | 垂直拼接多张图片 |
+
+### 创建
+
+| 函数 | 签名 | 说明 |
+|------|------|------|
+| `T图片_创建纯色图` | `func T图片_创建纯色图(宽度, 高度 int, 颜色值 color.Color) image.Image` | 创建纯色图片 |
+| `T图片_创建透明图` | `func T图片_创建透明图(宽度, 高度 int) image.Image` | 创建透明图片 |
+| `T图片_设置透明度` | `func T图片_设置透明度(图片 image.Image, 透明度 float64) image.Image` | 设置整体透明度 |
+
+### 二维码
+
+| 函数 | 签名 | 说明 |
+|------|------|------|
+| `T图片_生成二维码` | `func T图片_生成二维码(内容 string, 文件路径 string, 尺寸 int) error` | 生成二维码并保存到文件 |
+| `T图片_生成二维码base64` | `func T图片_生成二维码base64(内容 string) string` | 生成二维码并返回 Base64 |
+| `T图片_生成二维码自定义` | `func T图片_生成二维码自定义(内容 string, 容错等级 int, 尺寸 int) (image.Image, error)` | 自定义参数生成二维码 |
+| `T图片_生成二维码到写入器` | `func T图片_生成二维码到写入器(内容 string, 写入器 io.Writer, 尺寸 int) error` | 生成二维码写入 io.Writer |
 
 **示例**：
 
 ```go
+// 读取并缩放
+img, _ := T图片_读取("photo.jpg")
+thumb := T图片_缩略图(img, 200, 200)
+T图片_保存JPEG(thumb, "thumb.jpg", 85)
+
+// 添加水印
+底图, _ := T图片_读取("bg.png")
+水印, _ := T图片_读取("logo.png")
+结果 := T图片_添加水印(底图, 水印, "右下", 10, 10, 0.5)
+T图片_保存(结果, "output.png")
+
+// 灰度化 + 旋转
+灰度图 := T图片_灰度化(img)
+旋转图 := T图片_旋转90(灰度图)
+
+// 生成二维码
+T图片_生成二维码("https://example.com", "qr.png", 256)
 base64 := T图片_生成二维码base64("https://example.com")
-// 可直接用于 <img src="data:image/png;base64,xxx">
 ```
 
 ---
@@ -1664,7 +1761,7 @@ fmt.Println(*name, *port)
 | utils/Rsa | 1 | 7 |
 | utils/S数组 | 1 | 16 |
 | utils/S时间 | 1 | 9 |
-| utils/T图片 | 1 | 1 |
+| utils/T图片 | 1 | 42 |
 | utils/W文件 | 1 | 15 |
 | utils/W文本 | 1 | 42 |
 | utils/W网页 | 1 | 6 |

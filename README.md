@@ -115,7 +115,7 @@ import (
 | 🔑 | `Rsa` | RSA 加解密 / 签名验签 |
 | 📊 | `S数组` | 数组去重、排序、差集 |
 | ⏱ | `S时间` | 时间戳转换、格式化、计算 |
-| 🖼 | `T图片` | 二维码生成 |
+| 🖼 | `T图片` | 图片处理（读写/缩放/裁剪/旋转/效果/水印/二维码） |
 | 📄 | `W文件` | 文件读写、枚举、路径处理 |
 | ✏️ | `W文本` | 文本查找、截取、替换（最大模块） |
 | 🌍 | `W网页` | HTTP 请求、Cookie 管理 |
@@ -229,6 +229,7 @@ import (
 | [colly](https://github.com/gocolly/colly/v2) | 网页爬虫 |
 | [casbin](https://github.com/casbin/casbin/v2) | 权限管理 |
 | [xorm](https://xorm.io/xorm) | ORM 数据库操作 |
+| [imaging](https://github.com/disintegration/imaging) | 图片处理（缩放/裁剪/旋转/效果） |
 
 ## 📖 文档
 
