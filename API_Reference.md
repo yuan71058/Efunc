@@ -35,6 +35,15 @@
   - [2.20 Y原子](#220-y原子)
   - [2.21 Z字节集](#221-z字节集)
   - [2.22 Z正则](#222-z正则)
+  - [2.23 Jjson](#223-jjsonjson-操作)
+  - [2.24 C类型转换](#224-c类型转换安全类型转换)
+  - [2.25 P配置](#225-p配置配置文件管理)
+  - [2.26 E邮件](#226-e邮件邮件发送)
+  - [2.27 X系统信息](#227-x系统信息系统指标获取)
+  - [2.28 D定时](#228-d定时时任务管理)
+  - [2.29 G协程池](#229-g协程池goroutine-池管理)
+  - [2.30 L日志](#230-l日志高性能结构化日志)
+  - [2.31 K环境变量](#231-k环境变量环境变量管理)
 
 ---
 
@@ -900,6 +909,355 @@ Z正则_取ip端口("代理 192.168.1.1:8080 连接")         // "192.168.1.1:80
 
 ---
 
+## 2.23 Jjson（JSON 操作）
+
+> 源文件：`utils/Jjson.go` | 依赖：`github.com/tidwall/gjson`、`github.com/tidwall/sjson` | 用途：JSON 路径取值、设置、删除
+
+### 取值类
+
+| 函数 | 签名 | 说明 |
+|------|------|------|
+| `Jjson_取值` | `func Jjson_取值(json文本 string, 路径 string) string` | 按路径获取字符串值 |
+| `Jjson_取整数` | `func Jjson_取整数(json文本 string, 路径 string) int64` | 按路径获取整数值 |
+| `Jjson_取浮点数` | `func Jjson_取浮点数(json文本 string, 路径 string) float64` | 按路径获取浮点数值 |
+| `Jjson_取逻辑型` | `func Jjson_取逻辑型(json文本 string, 路径 string) bool` | 按路径获取布尔值 |
+| `Jjson_取数组` | `func Jjson_取数组(json文本 string, 路径 string) []gjson.Result` | 按路径获取数组 |
+| `Jjson_取对象` | `func Jjson_取对象(json文本 string, 路径 string) map[string]gjson.Result` | 按路径获取对象键值对 |
+| `Jjson_是否存在` | `func Jjson_是否存在(json文本 string, 路径 string) bool` | 判断路径是否存在 |
+| `Jjson_取数组长度` | `func Jjson_取数组长度(json文本 string, 路径 string) int` | 获取数组长度 |
+| `Jjson_取所有路径` | `func Jjson_取所有路径(json文本 string) []string` | 获取 JSON 中所有叶节点路径 |
+
+### 设置/删除类
+
+| 函数 | 签名 | 说明 |
+|------|------|------|
+| `Jjson_设置值` | `func Jjson_设置值(json文本 string, 路径 string, 值 interface{}) (string, error)` | 设置指定路径的值 |
+| `Jjson_设置文本值` | `func Jjson_设置文本值(json文本 string, 路径 string, 值 string) (string, error)` | 设置字符串值 |
+| `Jjson_设置整数值` | `func Jjson_设置整数值(json文本 string, 路径 string, 值 int64) (string, error)` | 设置整数值 |
+| `Jjson_删除值` | `func Jjson_删除值(json文本 string, 路径 string) (string, error)` | 删除指定路径 |
+
+### 序列化/反序列化类
+
+| 函数 | 签名 | 说明 |
+|------|------|------|
+| `Jjson_到文本` | `func Jjson_到文本(值 interface{}) (string, error)` | Go 值序列化为 JSON |
+| `Jjson_到格式化文本` | `func Jjson_到格式化文本(值 interface{}, 缩进 string) (string, error)` | 序列化为带缩进的 JSON |
+| `Jjson_解析` | `func Jjson_解析(json文本 string, 目标 interface{}) error` | JSON 反序列化到目标变量 |
+
+**示例**：
+
+```go
+json := `{"user":{"name":"张三","age":25},"tags":["go","dev"]}`
+Jjson_取值(json, "user.name")           // "张三"
+Jjson_取整数(json, "user.age")           // 25
+Jjson_取数组(json, "tags")               // [{go} {dev}]
+Jjson_是否存在(json, "user.email")        // false
+
+newJson, _ := Jjson_设置值(json, "user.email", "z@test.com")
+newJson, _ = Jjson_删除值(newJson, "tags")
+```
+
+---
+
+## 2.24 C类型转换（安全类型转换）
+
+> 源文件：`utils/C类型转换.go` | 依赖：`github.com/spf13/cast` | 用途：安全的类型转换，支持默认值
+
+### 基础转换
+
+| 函数 | 签名 | 说明 |
+|------|------|------|
+| `C类型_到文本` | `func C类型_到文本(值 interface{}) string` | 任意类型转字符串 |
+| `C类型_到整数` | `func C类型_到整数(值 interface{}) int` | 任意类型转 int |
+| `C类型_到整数64` | `func C类型_到整数64(值 interface{}) int64` | 任意类型转 int64 |
+| `C类型_到浮点数` | `func C类型_到浮点数(值 interface{}) float64` | 任意类型转 float64 |
+| `C类型_到逻辑型` | `func C类型_到逻辑型(值 interface{}) bool` | 任意类型转 bool |
+| `C类型_到文本切片` | `func C类型_到文本切片(值 interface{}) []string` | 任意类型转 []string |
+| `C类型_到整数切片` | `func C类型_到整数切片(值 interface{}) []int` | 任意类型转 []int |
+| `C类型_到时间` | `func C类型_到时间(值 interface{}) interface{}` | 任意类型转 time.Time |
+| `C类型_到Duration` | `func C类型_到Duration(值 interface{}) interface{}` | 任意类型转 time.Duration |
+
+### 安全转换（带默认值）
+
+| 函数 | 签名 | 说明 |
+|------|------|------|
+| `C类型_安全到文本` | `func C类型_安全到文本(值 interface{}, 默认值 string) string` | 安全转字符串，失败返回默认值 |
+| `C类型_安全到整数` | `func C类型_安全到整数(值 interface{}, 默认值 int) int` | 安全转 int，失败返回默认值 |
+| `C类型_安全到浮点数` | `func C类型_安全到浮点数(值 interface{}, 默认值 float64) float64` | 安全转 float64，失败返回默认值 |
+| `C类型_安全到逻辑型` | `func C类型_安全到逻辑型(值 interface{}, 默认值 bool) bool` | 安全转 bool，失败返回默认值 |
+
+### 进制转换
+
+| 函数 | 签名 | 说明 |
+|------|------|------|
+| `C类型_进制转换` | `func C类型_进制转换(文本 string, 进制 int) (int64, error)` | 按进制转换字符串为 int64（2/8/10/16） |
+
+**示例**：
+
+```go
+C类型_到整数("123")              // 123
+C类型_到逻辑型("true")           // true
+C类型_安全到整数("abc", 0)       // 0（转换失败返回默认值）
+C类型_进制转换("ff", 16)         // 255
+C类型_进制转换("1010", 2)        // 10
+```
+
+---
+
+## 2.25 P配置（配置文件管理）
+
+> 源文件：`utils/P配置.go` | 依赖：`github.com/spf13/viper`、`github.com/fsnotify/fsnotify` | 用途：多格式配置文件读写与热更新
+
+### 读取类
+
+| 函数 | 签名 | 说明 |
+|------|------|------|
+| `P配置_从文件读取` | `func P配置_从文件读取(文件路径 string) (*viper.Viper, error)` | 从配置文件创建 viper 实例 |
+| `P配置_从文件读取指定项` | `func P配置_从文件读取指定项(文件路径 string, 键名 string) (string, error)` | 从文件读取指定键值 |
+
+### 取值类
+
+| 函数 | 签名 | 说明 |
+|------|------|------|
+| `P配置_取值` | `func P配置_取值(v *viper.Viper, 键名 string) string` | 获取字符串值 |
+| `P配置_取整数值` | `func P配置_取整数值(v *viper.Viper, 键名 string) int` | 获取整数值 |
+| `P配置_取浮点数值` | `func P配置_取浮点数值(v *viper.Viper, 键名 string) float64` | 获取浮点数值 |
+| `P配置_取逻辑值` | `func P配置_取逻辑值(v *viper.Viper, 键名 string) bool` | 获取布尔值 |
+| `P配置_取字符串切片` | `func P配置_取字符串切片(v *viper.Viper, 键名 string) []string` | 获取字符串切片 |
+| `P配置_取整数切片` | `func P配置_取整数切片(v *viper.Viper, 键名 string) []int` | 获取整数切片 |
+
+### 写入/监听类
+
+| 函数 | 签名 | 说明 |
+|------|------|------|
+| `P配置_设置值` | `func P配置_设置值(v *viper.Viper, 键名 string, 值 interface{})` | 设置配置值（需写回文件持久化） |
+| `P配置_写回文件` | `func P配置_写回文件(v *viper.Viper) error` | 将配置写回文件 |
+| `P配置_监听变更` | `func P配置_监听变更(v *viper.Viper)` | 监听配置文件变更 |
+| `P配置_变更回调` | `func P配置_变更回调(v *viper.Viper, 回调 func())` | 注册变更回调函数 |
+
+### 环境变量绑定类
+
+| 函数 | 签名 | 说明 |
+|------|------|------|
+| `P配置_绑定环境变量` | `func P配置_绑定环境变量(v *viper.Viper, 键名 string, 环境变量名 string)` | 绑定键到环境变量 |
+| `P配置_自动环境变量` | `func P配置_自动环境变量(v *viper.Viper, 前缀 string)` | 开启自动环境变量绑定 |
+
+**示例**：
+
+```go
+v, _ := P配置_从文件读取("config.yaml")
+P配置_取值(v, "database.host")           // "localhost"
+P配置_取整数值(v, "database.port")        // 3306
+P配置_监听变更(v)
+P配置_变更回调(v, func() {
+    fmt.Println("配置已变更")
+})
+```
+
+---
+
+## 2.26 E邮件（邮件发送）
+
+> 源文件：`utils/E邮件.go` | 依赖：`github.com/jordan-wright/email` | 用途：SMTP 邮件发送，支持 HTML 正文、附件和 TLS
+
+| 函数 | 签名 | 说明 |
+|------|------|------|
+| `E邮件_发送` | `func E邮件_发送(服务器地址, 发件人邮箱, 密码, 收件人, 主题, 正文, HTML正文 string, 附件路径 []string) error` | SMTP 发送邮件 |
+| `E邮件_发送TLS` | `func E邮件_发送TLS(服务器地址, 发件人邮箱, 密码, 收件人, 主题, 正文, HTML正文 string, 附件路径 []string) error` | TLS 加密发送邮件（465 端口） |
+| `E邮件_发送简单邮件` | `func E邮件_发送简单邮件(服务器地址, 发件人邮箱, 密码, 收件人, 主题, 正文 string) error` | 发送纯文本邮件（无附件） |
+
+**示例**：
+
+```go
+E邮件_发送简单邮件(
+    "smtp.qq.com:587",
+    "sender@qq.com", "授权码",
+    "receiver@example.com",
+    "测试邮件", "这是一封测试邮件",
+)
+
+E邮件_发送TLS(
+    "smtp.qq.com:465",
+    "sender@qq.com", "授权码",
+    "a@test.com,b@test.com",
+    "HTML邮件", "",
+    "<h1>Hello</h1>", []string{"./report.pdf"},
+)
+```
+
+---
+
+## 2.27 X系统信息（系统指标获取）
+
+> 源文件：`utils/X系统信息.go` | 依赖：`github.com/shirou/gopsutil/v3` | 用途：获取 CPU、内存、磁盘、网络等系统指标
+
+| 函数 | 签名 | 说明 |
+|------|------|------|
+| `X系统_取CPU信息` | `func X系统_取CPU信息() ([]cpu.InfoStat, error)` | 获取 CPU 信息（型号、核心数等） |
+| `X系统_取CPU核心数` | `func X系统_取CPU核心数() (int, error)` | 获取逻辑核心数 |
+| `X系统_取CPU使用率` | `func X系统_取CPU使用率(间隔 int) ([]float64, error)` | 获取 CPU 使用率（间隔单位：秒） |
+| `X系统_取内存信息` | `func X系统_取内存信息() (*mem.VirtualMemoryStat, error)` | 获取内存使用情况 |
+| `X系统_取交换区信息` | `func X系统_取交换区信息() (*mem.SwapMemoryStat, error)` | 获取 Swap 使用情况 |
+| `X系统_取磁盘信息` | `func X系统_取磁盘信息() ([]disk.PartitionStat, error)` | 获取磁盘分区列表 |
+| `X系统_取磁盘使用量` | `func X系统_取磁盘使用量(路径 string) (*disk.UsageStat, error)` | 获取指定路径磁盘使用量 |
+| `X系统_取主机信息` | `func X系统_取主机信息() (*host.InfoStat, error)` | 获取主机名、OS、内核版本等 |
+| `X系统_取网络接口信息` | `func X系统_取网络接口信息() ([]net.InterfaceStat, error)` | 获取网络接口列表 |
+| `X系统_取网络连接信息` | `func X系统_取网络连接信息() ([]net.ConnectionStat, error)` | 获取活动网络连接 |
+| `X系统_取开机时间` | `func X系统_取开机时间() (uint64, error)` | 获取系统开机时长（秒） |
+
+**示例**：
+
+```go
+cores, _ := X系统_取CPU核心数()        // 8
+memInfo, _ := X系统_取内存信息()        // &{Total:17179869184 Used:8589934592 ...}
+usage, _ := X系统_取磁盘使用量("C:\\")  // &{Total:500G Used:200G ...}
+hostInfo, _ := X系统_取主机信息()       // &{Hostname:MY-PC OS:windows ...}
+```
+
+---
+
+## 2.28 D定时（定时任务管理）
+
+> 源文件：`utils/D定时.go` | 依赖：`github.com/robfig/cron/v3` | 用途：秒级 cron 定时任务调度
+
+| 函数 | 签名 | 说明 |
+|------|------|------|
+| `D定时_创建` | `func D定时_创建() *cron.Cron` | 创建秒级 cron 调度器 |
+| `D定时_添加任务` | `func D定时_添加任务(调度器 *cron.Cron, 表达式 string, 任务 func()) (cron.EntryID, error)` | 添加定时任务 |
+| `D定时_移除任务` | `func D定时_移除任务(调度器 *cron.Cron, 任务ID cron.EntryID)` | 移除指定任务 |
+| `D定时_启动` | `func D定时_启动(调度器 *cron.Cron)` | 启动调度器 |
+| `D定时_停止` | `func D定时_停止(调度器 *cron.Cron)` | 停止调度器 |
+| `D定时_取任务列表` | `func D定时_取任务列表(调度器 *cron.Cron) []cron.Entry` | 获取所有已注册任务 |
+| `D定时_简单执行` | `func D定时_简单执行(表达式 string, 任务 func()) (*cron.Cron, error)` | 一条龙创建+添加+启动 |
+
+**cron 表达式格式**（秒级）：`秒 分 时 日 月 周`
+
+| 表达式 | 说明 |
+|--------|------|
+| `*/5 * * * * *` | 每 5 秒执行 |
+| `0 30 9 * * *` | 每天 9:30 执行 |
+| `0 0 12 * * 1-5` | 周一至周五 12:00 执行 |
+
+**示例**：
+
+```go
+调度器, _ := D定时_简单执行("*/10 * * * * *", func() {
+    fmt.Println("每10秒执行一次")
+})
+defer D定时_停止(调度器)
+```
+
+---
+
+## 2.29 G协程池（goroutine 池管理）
+
+> 源文件：`utils/G协程池.go` | 依赖：`github.com/panjf2000/ants/v2` | 用途：高性能 goroutine 池，控制并发数
+
+| 函数 | 签名 | 说明 |
+|------|------|------|
+| `G协程池_创建` | `func G协程池_创建(池大小 int) (*ants.Pool, error)` | 创建指定大小的协程池 |
+| `G协程池_创建带选项` | `func G协程池_创建带选项(池大小 int, 选项 ...ants.Option) (*ants.Pool, error)` | 创建带自定义选项的协程池 |
+| `G协程池_提交任务` | `func G协程池_提交任务(池 *ants.Pool, 任务 func()) error` | 提交任务到协程池 |
+| `G协程池_取运行中数量` | `func G协程池_取运行中数量(池 *ants.Pool) int` | 获取运行中 worker 数量 |
+| `G协程池_取空闲数量` | `func G协程池_取空闲数量(池 *ants.Pool) int` | 获取空闲 worker 数量 |
+| `G协程池_取容量` | `func G协程池_取容量(池 *ants.Pool) int` | 获取池容量 |
+| `G协程池_取等待数量` | `func G协程池_取等待数量(池 *ants.Pool) int` | 获取等待中任务数量 |
+| `G协程池_释放` | `func G协程池_释放(池 *ants.Pool)` | 释放协程池资源 |
+| `G协程池_调整大小` | `func G协程池_调整大小(池 *ants.Pool, 新大小 int)` | 动态调整池容量 |
+| `G协程池_预分配` | `func G协程池_预分配(池大小 int) (*ants.Pool, error)` | 创建预分配 worker 的协程池 |
+
+**示例**：
+
+```go
+池, _ := G协程池_创建(100)
+defer G协程池_释放(池)
+
+for i := 0; i < 1000; i++ {
+    i := i
+    G协程池_提交任务(池, func() {
+        fmt.Println("任务", i)
+    })
+}
+```
+
+---
+
+## 2.30 L日志（高性能结构化日志）
+
+> 源文件：`utils/L日志.go` | 依赖：`go.uber.org/zap` | 用途：高性能结构化日志，支持 JSON/Console 格式
+
+### 创建类
+
+| 函数 | 签名 | 说明 |
+|------|------|------|
+| `L日志_创建开发日志` | `func L日志_创建开发日志() (*zap.Logger, error)` | 创建开发环境日志（Console 格式，Debug 级别） |
+| `L日志_创建生产日志` | `func L日志_创建生产日志() (*zap.Logger, error)` | 创建生产环境日志（JSON 格式，Info 级别） |
+| `L日志_创建自定义日志` | `func L日志_创建自定义日志(日志级别 int, 输出路径 []string, JSON格式 bool) (*zap.Logger, error)` | 自定义配置创建日志实例 |
+
+### 输出类
+
+| 函数 | 签名 | 说明 |
+|------|------|------|
+| `L日志_调试` | `func L日志_调试(日志 *zap.Logger, 消息 string, 字段 ...zap.Field)` | 输出 Debug 级别日志 |
+| `L日志_信息` | `func L日志_信息(日志 *zap.Logger, 消息 string, 字段 ...zap.Field)` | 输出 Info 级别日志 |
+| `L日志_警告` | `func L日志_警告(日志 *zap.Logger, 消息 string, 字段 ...zap.Field)` | 输出 Warn 级别日志 |
+| `L日志_错误` | `func L日志_错误(日志 *zap.Logger, 消息 string, 字段 ...zap.Field)` | 输出 Error 级别日志 |
+
+### 字段类
+
+| 函数 | 签名 | 说明 |
+|------|------|------|
+| `L日志_字符串` | `func L日志_字符串(键 string, 值 string) zap.Field` | 创建字符串字段 |
+| `L日志_整数` | `func L日志_整数(键 string, 值 int) zap.Field` | 创建整数字段 |
+| `L日志_错误类型` | `func L日志_错误类型(键 string, 值 error) zap.Field` | 创建 error 字段 |
+
+### 管理类
+
+| 函数 | 签名 | 说明 |
+|------|------|------|
+| `L日志_同步` | `func L日志_同步(日志 *zap.Logger) error` | 刷新日志缓冲区（程序退出前调用） |
+
+**示例**：
+
+```go
+日志, _ := L日志_创建开发日志()
+defer L日志_同步(日志)
+
+L日志_信息(日志, "服务启动",
+    L日志_字符串("host", "localhost"),
+    L日志_整数("port", 8080),
+)
+```
+
+---
+
+## 2.31 K环境变量（环境变量管理）
+
+> 源文件：`utils/K环境变量.go` | 依赖：`github.com/joho/godotenv` | 用途：.env 文件加载与环境变量操作
+
+| 函数 | 签名 | 说明 |
+|------|------|------|
+| `K环境_加载` | `func K环境_加载(文件路径 string) error` | 从 .env 文件加载环境变量（不覆盖已有） |
+| `K环境_加载并覆盖` | `func K环境_加载并覆盖(文件路径 string) error` | 从 .env 文件加载环境变量（覆盖已有） |
+| `K环境_取值` | `func K环境_取值(名称 string) string` | 获取环境变量值 |
+| `K环境_取值带默认值` | `func K环境_取值带默认值(名称 string, 默认值 string) string` | 获取环境变量值，不存在返回默认值 |
+| `K环境_设置值` | `func K环境_设置值(名称 string, 值 string) error` | 设置环境变量 |
+| `K环境_删除值` | `func K环境_删除值(名称 string) error` | 删除环境变量 |
+| `K环境_是否存在` | `func K环境_是否存在(名称 string) bool` | 判断环境变量是否存在 |
+| `K环境_取所有` | `func K环境_取所有() []string` | 获取所有环境变量 |
+| `K环境_从文本读取` | `func K环境_从文本读取(文本 string) (map[string]string, error)` | 从文本解析环境变量（无需文件） |
+
+**示例**：
+
+```go
+K环境_加载(".env")
+dbHost := K环境_取值带默认值("DB_HOST", "localhost")
+dbPort := K环境_安全到整数(K环境_取值("DB_PORT"), 3306)
+K环境_设置值("APP_MODE", "production")
+```
+
+---
+
 ## 附录：函数总数统计
 
 | 模块 | 文件数 | 函数/方法数 |
@@ -927,4 +1285,13 @@ Z正则_取ip端口("代理 192.168.1.1:8080 连接")         // "192.168.1.1:80
 | utils/Y原子 | 1 | 2 |
 | utils/Z字节集 | 1 | 4 |
 | utils/Z正则 | 1 | 11 |
-| **合计** | **27** | **225** |
+| utils/Jjson | 1 | 16 |
+| utils/C类型转换 | 1 | 14 |
+| utils/P配置 | 1 | 15 |
+| utils/E邮件 | 1 | 3 |
+| utils/X系统信息 | 1 | 11 |
+| utils/D定时 | 1 | 7 |
+| utils/G协程池 | 1 | 10 |
+| utils/L日志 | 1 | 11 |
+| utils/K环境变量 | 1 | 9 |
+| **合计** | **36** | **321** |
