@@ -363,7 +363,6 @@ func W文本_取文本左边(内容 string, 关键字 string) string {
 		return ""
 	}
 
-	位置 = 位置
 	内容 = string([]byte(内容)[:位置])
 	return 内容
 }
