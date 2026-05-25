@@ -39,10 +39,22 @@ EFunc/
     ├── B编码.go              # 编码/解码（URL、Base64、USC2）
     ├── C程序.go              # 程序控制（延时、GUID、日志、命令行等）
     ├── Float64转换.go        # 高精度浮点数运算
-    ├── H汇编.go              # 汇编级随机数
+ │   ├── H汇编_汇编器.go       # x86 机器码构建器（动态生成执行机器码）
+│   ├── H汇编_汇编指令.go      # x86 汇编指令生成（MOV/CALL/JMP/ADD 等链式调用）
+│   ├── H内存.go              # 内存操作（进程内存读写、搜索、分配释放、进程枚举）
+│   ├── HHook.go              # MinHook API Hook 封装
+│   ├── HHook/                # MinHook C 库 & cgo 包装
+│   │   ├── HHook.go          # cgo 包装层
+│   │   ├── MinHook.h         # MinHook 主头文件
+│   │   ├── hook.c            # Hook 核心实现
+│   │   └── ...               # 其他 C 源文件
+│   ├── J键鼠.go              # 键盘鼠标操作（模拟按键、鼠标移动点击、虚拟键码常量）
+│   ├── X线程.go              # 多线程（线程创建/挂起/恢复、临界区、事件、互斥体、信号量）
+│   ├── X系统命令.go           # 系统命令（关机/重启/注销、剪辑版读写、消息框、环境变量）
     ├── IP.go                 # IP 地址转换
     ├── Int转换.go            # 整数工具
     ├── J校验.go              # 校验摘要（MD5、CRC32、SHA 系列）
+    ├── J加解密.go            # 对称加解密（AES/DES/3DES/RC4/XOR/TEA/XXTEA）
     ├── L类_post数据类.go     # POST 数据构造器
     ├── Map.go                # Map 工具
     ├── M目录.go              # 目录操作
@@ -381,14 +393,253 @@ EFunc/
 
 ---
 
-#### 3.2.6 H汇编（底层随机数）
+#### 3.2.6 H汇编（汇编器：机器码构建 & 执行）
 
-| 文件 | [H汇编.go](utils/H汇编.go) |
+| 文件 | [H汇编_汇编器.go](utils/H汇编_汇编器.go)、[H汇编_汇编指令.go](utils/H汇编_汇编指令.go) |
 |------|------|
+
+> ⚠️ 汇编器模块为 **Windows 专用**（`//go:build windows`），使用 `VirtualAlloc`/`VirtualAllocEx` + `CreateRemoteThread`。
+
+**随机数函数**（已迁移至 `核心库.go`）：
 
 | 函数 | 签名 | 说明 |
 |------|------|------|
-| `H汇编_取随机数` | `(int, int) int` | 基于时间种子的随机数 |
+| `H汇编_取随机数` | `(起始数, 结束数 int) int` | 生成 [起始数, 结束数] 范围内的随机整数（线程安全） |
+| `H汇编_取随机字节` | `(长度 int) ([]byte, error)` | 使用 `crypto/rand` 生成安全随机字节序列 |
+
+##### 3.2.6.1 汇编器核心（机器码构建 & 执行）
+
+| 函数 | 签名 | 说明 |
+|------|------|------|
+| `H汇编_置代码` | `(代码 []byte)` | 初始化/重置代码缓冲区 |
+| `H汇编_取代码` | `() []byte` | 获取当前构建的机器码字节集 |
+| `H汇编_运行汇编代码` | `() (uintptr, error)` | 在当前进程分配可执行内存并运行机器码，返回 EAX 值 |
+| `H汇编_远程执行汇编代码` | `(进程ID uint32, 代码 []byte) error` | 远程注入目标进程执行机器码（VirtualAllocEx + CreateRemoteThread） |
+
+##### 3.2.6.2 汇编指令构建（x86 机器码生成）
+
+**栈操作**：`H汇编_PUSHAD`(60)、`H汇编_POPAD`(61)、`H汇编_LEAVE`(C9)、`H汇编_NOP`(90)、`H汇编_RET`(C3)
+
+**MOV 立即数→寄存器**：`H汇编_MOV_EAX(v)` ~ `H汇编_MOV_EBP(v)`（8 寄存器）
+
+**MOV [addr] ← EAX**：`H汇编_MOV_DWORD_PTR_EAX(addr)` → `mov [addr], eax`
+
+**MOV 寄存器 ← [addr]**：`H汇编_MOV_EAX_DWORD_PTR(addr)` 等 8 个函数
+
+**MOV 寄存器 ← [寄存器]**：`H汇编_MOV_EAX_DWORD_PTR_EAX()` 等 8 个函数
+
+**ADD/CALL/JMP/CMP/INC/DEC/IDIV/IMUL** 等更多指令详见源码
+
+> 仅支持 Windows x86_64 平台。
+
+---
+
+#### 3.2.7 H内存（内存操作）
+
+| 文件 | [H内存.go](utils/H内存.go) |
+|------|------|
+
+> ⚠️ Windows 专用模块，依赖 kernel32.dll API 实现进程内存读写、AOB 搜索、进程枚举等功能。
+
+**进程内存读写**：
+
+| 函数 | 签名 | 说明 |
+|------|------|------|
+| `H内存_打开进程` | `(进程ID uint32, 权限 uint32) (syscall.Handle, error)` | 打开目标进程并获取句柄 |
+| `H内存_读整数` | `(hProcess syscall.Handle, 地址 uintptr) (int32, error)` | 读取 32 位有符号整数 |
+| `H内存_读整数64` | `(hProcess syscall.Handle, 地址 uintptr) (int64, error)` | 读取 64 位有符号整数 |
+| `H内存_读字节集` | `(hProcess syscall.Handle, 地址 uintptr, 长度 uint32) ([]byte, error)` | 读取原始字节数据 |
+| `H内存_读浮点数` | `(hProcess syscall.Handle, 地址 uintptr) (float32, error)` | 读取 32 位浮点数 |
+| `H内存_读浮点数64` | `(hProcess syscall.Handle, 地址 uintptr) (float64, error)` | 读取 64 位浮点数 |
+| `H内存_写整数` | `(hProcess syscall.Handle, 地址 uintptr, 值 int32) error` | 写入 32 位整数 |
+| `H内存_写整数64` | `(hProcess syscall.Handle, 地址 uintptr, 值 int64) error` | 写入 64 位整数 |
+| `H内存_写字节集` | `(hProcess syscall.Handle, 地址 uintptr, 数据 []byte) error` | 写入原始字节数据 |
+| `H内存_关闭句柄` | `(hProcess syscall.Handle) error` | 关闭进程句柄 |
+
+**内存搜索**：
+
+| 函数 | 签名 | 说明 |
+|------|------|------|
+| `H内存_搜索字节集` | `(hProcess syscall.Handle, 特征码 []byte, 起始地址, 长度 uintptr) ([]uintptr, error)` | AOB 特征码搜索（0xFF 为通配符） |
+| `H内存_搜索文本` | `(hProcess syscall.Handle, 文本 string, 起始地址, 长度 uintptr) ([]uintptr, error)` | 搜索文本字符串 |
+
+**虚拟内存管理**：
+
+| 函数 | 签名 | 说明 |
+|------|------|------|
+| `H内存_分配内存` | `(hProcess syscall.Handle, 大小 uintptr) (uintptr, error)` | 在目标进程分配可执行读写内存 |
+| `H内存_释放内存` | `(hProcess syscall.Handle, 地址 uintptr) error` | 释放远程内存 |
+| `H内存_修改保护` | `(hProcess syscall.Handle, 地址, 大小 uintptr, 新保护 uint32) (uint32, error)` | 修改内存保护属性 |
+| `H内存_查询内存` | `(hProcess syscall.Handle, 地址 uintptr) (*MEMORY_BASIC_INFORMATION, error)` | 查询内存区域信息 |
+
+**进程枚举与管理**：
+
+| 函数 | 签名 | 说明 |
+|------|------|------|
+| `H内存_取进程ID` | `(进程名 string) (uint32, error)` | 通过进程名获取 PID |
+| `H内存_枚举进程` | `() ([]PROCESSENTRY32W, error)` | 枚举所有运行进程 |
+| `H内存_取模块基址` | `(进程ID uint32, 模块名 string) (uintptr, error)` | 获取模块加载基址 |
+| `H内存_终止进程` | `(进程ID uint32) error` | 强制终止进程 |
+| `H内存_取进程名称` | `(进程ID uint32) (string, []uint16, error)` | 获取进程对应可执行文件名 |
+| `H内存_是否存在进程` | `(进程ID uint32) bool` | 检查进程是否运行 |
+| `H内存_取进程位数` | `(进程ID uint32) int` | 检测进程是 32 位还是 64 位 |
+
+---
+
+#### 3.2.8 J键鼠（键盘鼠标操作）
+
+| 文件 | [J键鼠.go](utils/J键鼠.go) |
+|------|------|
+
+> ⚠️ Windows 专用模块，基于 user32.dll API 实现模拟输入与状态检测。
+
+**键盘操作**：
+
+| 函数 | 签名 | 说明 |
+|------|------|------|
+| `J键鼠_按键` | `(虚拟键码 int, 按下 bool)` | 模拟按键按下/弹起 |
+| `J键鼠_按键组合` | `(虚拟键码1, 虚拟键码2 int)` | 模拟组合键（如 Ctrl+C） |
+| `J键鼠_模拟按键` | `(虚拟键码 int)` | 模拟完整按下+弹起 |
+| `J键鼠_模拟文本输入` | `(text string)` | 逐字符模拟中文/英文输入 |
+| `J键鼠_取按键状态` | `(虚拟键码 int) int16` | 异步获取按键状态 |
+| `J键鼠_是否按下` | `(虚拟键码 int) bool` | 判断按键是否按下 |
+
+**鼠标操作**：
+
+| 函数 | 签名 | 说明 |
+|------|------|------|
+| `J键鼠_移动鼠标` | `(x, y int)` | 移动光标到指定坐标 |
+| `J键鼠_取鼠标位置` | `() (int, int)` | 获取光标坐标 |
+| `J键鼠_鼠标左键单击` | `()` | 左键单击 |
+| `J键鼠_鼠标左键按下` | `()` | 左键按下 |
+| `J键鼠_鼠标左键弹起` | `()` | 左键弹起 |
+| `J键鼠_鼠标右键单击` | `()` | 右键单击 |
+| `J键鼠_鼠标中键单击` | `()` | 中键单击 |
+| `J键鼠_鼠标滚轮` | `(delta int)` | 滚动滚轮 |
+
+**其他**：
+
+| 函数 | 签名 | 说明 |
+|------|------|------|
+| `J键鼠_取屏幕宽度` | `() int` | 主屏幕宽度 |
+| `J键鼠_取屏幕高度` | `() int` | 主屏幕高度 |
+| `J键鼠_锁定输入` | `(锁定 bool)` | 锁定/解锁键盘鼠标 |
+
+> 文件内置完整的 Win32 虚拟键码常量（VK_*），支持所有标准键（字母 A-Z、F1-F12、方向键、小键盘等）。
+
+---
+
+#### 3.2.9 X线程（多线程）
+
+| 文件 | [X线程.go](utils/X线程.go) |
+|------|------|
+
+> ⚠️ Windows 专用模块，基于 kernel32.dll API。
+
+**线程创建与管理**：
+
+| 函数 | 签名 | 说明 |
+|------|------|------|
+| `X线程_创建` | `(线程函数 uintptr, 参数 uintptr) (syscall.Handle, error)` | 创建内核级线程 |
+| `X线程_取当前ID` | `() uint32` | 获取当前线程 ID |
+| `X线程_挂起` | `(hThread syscall.Handle) (uint32, error)` | 挂起线程 |
+| `X线程_恢复` | `(hThread syscall.Handle) (uint32, error)` | 恢复线程 |
+| `X线程_终止` | `(hThread syscall.Handle, 退出码 uint32) error` | 强制终止线程 |
+| `X线程_关闭句柄` | `(handle syscall.Handle) error` | 关闭内核句柄 |
+| `X线程_延时` | `(毫秒 uint32)` | Sleep 延时 |
+| `X线程_等待单个` | `(handle syscall.Handle, 超时毫秒 uint32) uint32` | 等待单个对象 |
+| `X线程_等待多个` | `(handles []syscall.Handle, 等待全部 bool, 超时毫秒 uint32) uint32` | 等待多个对象 |
+
+**临界区**：
+
+| 函数 | 签名 | 说明 |
+|------|------|------|
+| `X线程_临界区_创建` | `() (*CRITICAL_SECTION, error)` | 创建临界区 |
+| `X线程_临界区_销毁` | `(cs *CRITICAL_SECTION)` | 销毁临界区 |
+| `X线程_临界区_进入` | `(cs *CRITICAL_SECTION)` | 进入临界区 |
+| `X线程_临界区_离开` | `(cs *CRITICAL_SECTION)` | 离开临界区 |
+
+**事件（Event）**：
+
+| 函数 | 签名 | 说明 |
+|------|------|------|
+| `X线程_事件_创建` | `(手动重置, 初始状态 bool, 名称 string) (syscall.Handle, error)` | 创建事件 |
+| `X线程_事件_设置` | `(hEvent syscall.Handle) error` | 设置事件有信号 |
+| `X线程_事件_重置` | `(hEvent syscall.Handle) error` | 重置事件无信号 |
+| `X线程_事件_脉冲` | `(hEvent syscall.Handle) error` | 脉冲触发 |
+
+**互斥体（Mutex）**：
+
+| 函数 | 签名 | 说明 |
+|------|------|------|
+| `X线程_互斥体_创建` | `(名称 string) (syscall.Handle, bool, error)` | 创建互斥体（防多开） |
+| `X线程_互斥体_打开` | `(名称 string) (syscall.Handle, error)` | 打开已有互斥体 |
+| `X线程_互斥体_释放` | `(hMutex syscall.Handle) error` | 释放互斥体 |
+
+**信号量（Semaphore）**：
+
+| 函数 | 签名 | 说明 |
+|------|------|------|
+| `X线程_信号量_创建` | `(初始计数, 最大计数 int32, 名称 string) (syscall.Handle, error)` | 创建信号量 |
+| `X线程_信号量_打开` | `(名称 string) (syscall.Handle, error)` | 打开已有信号量 |
+| `X线程_信号量_释放` | `(hSemaphore syscall.Handle, 释放数量 int32) (int32, error)` | 释放信号量 |
+
+**Goroutine 封装**（G线程）：
+
+| 函数 | 签名 | 说明 |
+|------|------|------|
+| `X线程_协程_创建` | `(执行函数 func()) *G线程` | 创建协作式线程 |
+| `启动` / `暂停` / `继续` / `退出` | goroutine 生命周期控制 |
+
+---
+
+#### 3.2.10 X系统命令（系统命令）
+
+| 文件 | [X系统命令.go](utils/X系统命令.go) |
+|------|------|
+
+> ⚠️ Windows 专用模块，整合 user32.dll / kernel32.dll / advapi32.dll API。
+
+**关机/重启/注销**：
+
+| 函数 | 签名 | 说明 |
+|------|------|------|
+| `X系统_关机` | `(强制 bool) error` | 关机（支持强制） |
+| `X系统_重启` | `(强制 bool) error` | 重启（支持强制） |
+| `X系统_注销` | `(强制 bool) error` | 注销当前用户 |
+| `X系统_锁定工作站` | `() error` | 锁定屏幕 |
+| `X系统_启用关机权限` | `() error` | 获取 SE_SHUTDOWN_NAME 权限 |
+| `X系统_远程关机` | `(计算机名, 消息 string, 超时秒 uint32, 强制 bool) error` | 远程关机 |
+
+**剪辑版操作**：
+
+| 函数 | 签名 | 说明 |
+|------|------|------|
+| `X系统_置剪辑版文本` | `(text string) error` | 设置文本到剪贴板 |
+| `X系统_取剪辑版文本` | `() (string, error)` | 读取剪贴板文本 |
+| `X系统_清空剪辑版` | `() error` | 清空剪贴板 |
+
+**消息框**：
+
+| 函数 | 签名 | 说明 |
+|------|------|------|
+| `X系统_信息框` | `(标题, 内容 string)` | 弹出信息框（MB_OK） |
+| `X系统_信息框_确认` | `(标题, 内容 string) int` | 确认框（OK/Cancel） |
+| `X系统_信息框_是否` | `(标题, 内容 string) int` | 是否框（Yes/No） |
+
+**系统命令 & 工具**：
+
+| 函数 | 签名 | 说明 |
+|------|------|------|
+| `X系统_执行命令` | `(命令 string, 参数 ...string) (string, error)` | 执行命令并返回输出 |
+| `X系统_执行命令隐藏` | `(命令 string, 参数 ...string) error` | 后台执行（不显示窗口） |
+| `X系统_取计算机名` | `() (string, error)` | 获取本机计算机名 |
+| `X系统_取用户名` | `() (string, error)` | 获取当前用户名 |
+| `X系统_禁止屏幕保护` | `(禁止 bool) error` | 禁用/启用屏保 |
+| `X系统_置屏保超时` | `(秒 int) error` | 设置屏保超时 |
+| `X系统_置环境变量` | `(名称, 值 string) error` | 设置环境变量 |
+| `X系统_取环境变量` | `(名称 string) string` | 获取环境变量 |
+| `X系统_删除环境变量` | `(名称 string) error` | 删除环境变量 |
 
 ---
 
@@ -502,7 +753,107 @@ EFunc/
 
 ---
 
-#### 3.2.14 S数组（数组/切片工具）
+#### 3.2.14 J加解密（对称加解密算法）
+
+| 文件 | [J加解密.go](utils/J加解密.go) |
+|------|------|
+
+> 跨平台模块，使用 Go 标准库 `crypto/aes`、`crypto/des`、`crypto/cipher`、`crypto/rand`，支持 AES（CBC/ECB/GCM/CTR/CFB/OFB）、DES/3DES（CBC/ECB）、RC4、XOR、TEA/XXTEA 等常用对称加解密算法。输出统一为 Base64 编码字符串。
+
+**AES 加解密**：
+
+| 函数 | 签名 | 说明 |
+|------|------|------|
+| `J加解密_AES_CBC加密` | `(明文, 密钥, IV []byte) (string, error)` | AES-CBC 加密，PKCS7 填充，返回 Base64 密文 |
+| `J加解密_AES_CBC解密` | `(密文Base64 string, 密钥, IV []byte) ([]byte, error)` | AES-CBC 解密 |
+| `J加解密_AES_ECB加密` | `(明文, 密钥 []byte) (string, error)` | AES-ECB 加密（不推荐生产环境） |
+| `J加解密_AES_ECB解密` | `(密文Base64 string, 密钥 []byte) ([]byte, error)` | AES-ECB 解密 |
+| `J加解密_AES_GCM加密` | `(明文, 密钥, 附加数据 []byte) (string, error)` | AES-GCM 认证加密（推荐），自动生成 nonce |
+| `J加解密_AES_GCM解密` | `(密文Base64 string, 密钥, 附加数据 []byte) ([]byte, error)` | AES-GCM 认证解密 |
+| `J加解密_AES_CTR加密` | `(明文, 密钥 []byte) (string, error)` | AES-CTR 流加密，自动生成 IV |
+| `J加解密_AES_CTR解密` | `(密文Base64 string, 密钥 []byte) ([]byte, error)` | AES-CTR 解密 |
+| `J加解密_AES_CFB加密` | `(明文, 密钥 []byte) (string, error)` | AES-CFB 流加密，自动生成 IV |
+| `J加解密_AES_CFB解密` | `(密文Base64 string, 密钥 []byte) ([]byte, error)` | AES-CFB 解密 |
+| `J加解密_AES_OFB加密` | `(明文, 密钥 []byte) (string, error)` | AES-OFB 流加密，自动生成 IV |
+| `J加解密_AES_OFB解密` | `(密文Base64 string, 密钥 []byte) ([]byte, error)` | AES-OFB 解密 |
+
+**DES 加解密**：
+
+| 函数 | 签名 | 说明 |
+|------|------|------|
+| `J加解密_DES_CBC加密` | `(明文, 密钥, IV []byte) (string, error)` | DES-CBC 加密（密钥 8 字节） |
+| `J加解密_DES_CBC解密` | `(密文Base64 string, 密钥, IV []byte) ([]byte, error)` | DES-CBC 解密 |
+| `J加解密_DES_ECB加密` | `(明文, 密钥 []byte) (string, error)` | DES-ECB 加密 |
+| `J加解密_DES_ECB解密` | `(密文Base64 string, 密钥 []byte) ([]byte, error)` | DES-ECB 解密 |
+
+**3DES 加解密**：
+
+| 函数 | 签名 | 说明 |
+|------|------|------|
+| `J加解密_3DES_CBC加密` | `(明文, 密钥, IV []byte) (string, error)` | 3DES-CBC 加密（密钥 24 字节） |
+| `J加解密_3DES_CBC解密` | `(密文Base64 string, 密钥, IV []byte) ([]byte, error)` | 3DES-CBC 解密 |
+| `J加解密_3DES_ECB加密` | `(明文, 密钥 []byte) (string, error)` | 3DES-ECB 加密 |
+| `J加解密_3DES_ECB解密` | `(密文Base64 string, 密钥 []byte) ([]byte, error)` | 3DES-ECB 解密 |
+
+**RC4 / XOR 加解密**：
+
+| 函数 | 签名 | 说明 |
+|------|------|------|
+| `J加解密_RC4` | `(数据, 密钥 []byte) string` | RC4 流加密，返回 Base64 密文 |
+| `J加解密_RC4字节集` | `(数据, 密钥 []byte) []byte` | RC4 流加密，返回原始字节集 |
+| `J加解密_XOR` | `(数据, 密钥 []byte) []byte` | XOR 异或加密 |
+| `J加解密_XOR文本` | `(数据, 密钥 []byte) string` | XOR 加密，返回 Base64 密文 |
+
+**TEA / XXTEA 加解密**：
+
+| 函数 | 签名 | 说明 |
+|------|------|------|
+| `J加解密_TEA加密` | `(明文, 密钥 []byte) (string, error)` | TEA 加密（32 轮 Feistel，密钥 16 字节） |
+| `J加解密_TEA解密` | `(密文Base64 string, 密钥 []byte) ([]byte, error)` | TEA 解密 |
+| `J加解密_XXTEA加密` | `(明文, 密钥 []byte) (string, error)` | XXTEA 加密（支持任意长度数据） |
+| `J加解密_XXTEA解密` | `(密文Base64 string, 密钥 []byte) ([]byte, error)` | XXTEA 解密 |
+
+**密钥/IV 生成工具**：
+
+| 函数 | 签名 | 说明 |
+|------|------|------|
+| `J加解密_生成AES密钥` | `(长度 int) ([]byte, error)` | 生成随机 AES 密钥（16/24/32 字节） |
+| `J加解密_生成IV` | `(块大小 int) ([]byte, error)` | 生成随机初始化向量（AES=16, DES=8） |
+
+**PKCS7 填充辅助**：
+
+| 函数 | 签名 | 说明 |
+|------|------|------|
+| `pkcs7Padding` | `([]byte, int) []byte` | 加密前 PKCS7 填充 |
+| `pkcs7Unpadding` | `([]byte) ([]byte, error)` | 解密后去除 PKCS7 填充 |
+
+**使用示例**：
+```go
+// AES-CBC 加密示例
+key, _ := J加解密_生成AES密钥(32)
+iv, _ := J加解密_生成IV(16)
+密文, _ := J加解密_AES_CBC加密([]byte("Hello World"), key, iv)
+明文, _ := J加解密_AES_CBC解密(密文, key, iv)
+
+// AES-GCM 认证加密（推荐）
+密文, _ := J加解密_AES_GCM加密([]byte("sensitive data"), key, nil)
+明文, _ := J加解密_AES_GCM解密(密文, key, nil)
+
+// XOR 简单加密
+密文 := J加解密_XOR文本([]byte("hello"), []byte("pwd"))
+
+// RC4 加密
+密文 := J加解密_RC4([]byte("hello"), []byte("12345"))
+
+// TEA 加密（常用于游戏修改等场景）
+密文, _ := J加解密_TEA加密([]byte("data"), []byte("0123456789abcdef"))
+```
+
+> 注意：ECB 模式安全性低，不建议生产使用；GCM 模式同时提供机密性和完整性验证，为推荐方案。
+
+---
+
+#### 3.2.15 S数组（数组/切片工具）
 
 | 文件 | [S数组.go](utils/S数组.go) |
 |------|------|
@@ -735,6 +1086,111 @@ EFunc/
 
 ---
 
+#### 3.2.24 HHook（API Hook 引擎）
+
+> ⚠️ 本模块为 Windows 专用（编译标签 `amd64` + cgo），依赖 `gcc`（MinGW-w64 / TDM-GCC）。基于 [MinHook](https://github.com/TsudaKageyu/minhook) 库实现。
+
+| 文件 | [HHook.go](utils/HHook.go)、[HHook/HHook.go](utils/HHook/HHook.go)、[HHook/*.c](utils/HHook/) |
+|------|------|
+
+本模块封装了 MinHook 库的核心 API，支持对 Windows API 函数的 Inline Hook（运行时劫持目标函数跳转到回调函数）。
+
+**底层架构**：
+- `utils/HHook/` — cgo 子包，内含 MinHook v1.3.4 完整 C 源码及 Go 包装层
+- `utils/HHook.go` — 面向用户的公开 API（中文命名）
+
+##### 3.2.24.1 基础函数
+
+| 函数 | 签名 | 说明 |
+|------|------|------|
+| `HHook_初始化` | `() error` | 初始化 Hook 引擎，分配内部资源。必须在使用其他函数前调用 |
+| `HHook_卸载` | `() error` | 卸载所有 Hook 并释放资源。应在程序退出前调用 |
+
+##### 3.2.24.2 Hook 管理
+
+| 函数 | 签名 | 说明 |
+|------|------|------|
+| `HHook_安装Hook` | `(目标地址, 回调地址 uintptr) (uintptr, error)` | 为目标函数安装 Hook（禁用状态创建），返回原始函数的 trampoline 地址 |
+| `HHook_安装ApiHook` | `(模块名, 函数名 string, 回调地址 uintptr) (uintptr, error)` | 按模块名+函数名为导出 API 安装 Hook，如 `"kernel32.dll"` + `"MessageBoxW"` |
+| `HHook_安装ApiHookEx` | `(模块名, 函数名 string, 回调地址 uintptr) (原地址, 目标地址 uintptr, err error)` | 扩展版安装 API Hook，同时返回原始函数地址和目标函数地址 |
+| `HHook_卸载Hook` | `(目标地址 uintptr) error` | 移除指定 Hook 并恢复原始代码 |
+| `HHook_启用Hook` | `(目标地址 uintptr) error` | 启用指定 Hook（或传入 `0` 启用全部） |
+| `HHook_禁用Hook` | `(目标地址 uintptr) error` | 禁用指定 Hook（或传入 `0` 禁用全部） |
+| `HHook_启用全部Hook` | `() error` | 批量启用所有已创建的 Hook |
+| `HHook_禁用全部Hook` | `() error` | 批量禁用所有已创建的 Hook |
+
+##### 3.2.24.3 队列操作
+
+用于线程安全的批量切换：先排队，再一次性应用。
+
+| 函数 | 签名 | 说明 |
+|------|------|------|
+| `HHook_排队启用Hook` | `(目标地址 uintptr) error` | 将指定 Hook 加入启用队列 |
+| `HHook_排队禁用Hook` | `(目标地址 uintptr) error` | 将指定 Hook 加入禁用队列 |
+| `HHook_应用排队` | `() error` | 一次性应用所有排队的启用/禁用操作 |
+
+##### 3.2.24.4 错误处理
+
+| 函数 | 签名 | 说明 |
+|------|------|------|
+| `HHook_取状态文本` | `(状态码 int) string` | 将 MH_STATUS 状态码转换为中文描述文本 |
+
+**状态码对应表**：
+
+| 状态码 | 含义 |
+|--------|------|
+| 0 | 成功 |
+| 1 | 已初始化 |
+| 2 | 未初始化 |
+| 3 | 已创建 |
+| 4 | 未创建 |
+| 5 | 已启用 |
+| 6 | 已禁用 |
+| 7 | 不可执行 |
+| 8 | 不支持的函数 |
+| 9 | 内存分配失败 |
+| 10 | 内存保护失败 |
+| 11 | 模块未找到 |
+| 12 | 函数未找到 |
+
+##### 3.2.24.5 使用示例
+
+```go
+import (
+    "syscall"
+    "unsafe"
+    "golang.org/x/sys/windows"
+    "github.com/yuan71058/Efunc/utils"
+)
+
+// 1. 初始化
+if err := utils.HHook_初始化(); err != nil {
+    panic(err)
+}
+defer utils.HHook_卸载()
+
+// 2. 安装 Hook
+// 使用 windows.NewCallback 将 Go 函数转为 C 函数指针
+callback := windows.NewCallback(myDetour)
+original, err := utils.HHook_安装ApiHook("kernel32.dll", "MessageBoxW", callback)
+if err != nil {
+    panic(err)
+}
+
+// 3. 启用 Hook
+utils.HHook_启用Hook(0) // 0 = MH_ALL_HOOKS
+
+// 4. 需要调用原始函数时，通过 trampoline 地址回调
+// ...
+
+// 5. 卸载 Hook
+utils.HHook_卸载Hook(0)
+```
+
+> 编译要求：安装 MinGW-w64 或 TDM-GCC 确保 gcc 可用。cgo 会自动编译 `HHook/` 下的 C 源文件并链接 kernel32。
+
+---
+
 ## 四、依赖关系图
 
 ```
@@ -819,6 +1275,7 @@ EFunc/
 | L | Post 数据类 | L类_post数据类.go |
 | M | Map/目录 | Map.go, M目录.go |
 | R | RSA 加密 | Rsa.go |
+| J | 对称加解密 | J加解密.go |
 | S | 数组/时间 | S数组.go, S时间.go |
 | T | 图片 | T图片.go |
 | W | 文件/文本/网页 | W文件.go, W文本.go, W网页.go |

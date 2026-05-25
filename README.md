@@ -6,7 +6,7 @@
 
 中文命名的工具函数库，涵盖编码转换、加密校验、文本处理、文件操作、网络请求、并发安全数据结构、数据库操作、权限管理等常用功能
 
-[![Version](https://img.shields.io/badge/Version-v2.3.0-blue?style=flat-square)](https://github.com/yuan71058/Efunc/releases)
+[![Version](https://img.shields.io/badge/Version-v2.4.0-blue?style=flat-square)](https://github.com/yuan71058/Efunc/releases)
 [![Go Version](https://img.shields.io/badge/Go-%3E%3D1.18-00ADD8?style=flat-square&logo=go)](https://go.dev/)
 [![License](https://img.shields.io/badge/License-MIT-green?style=flat-square)](LICENSE)
 [![Functions](https://img.shields.io/badge/Functions-700%2B-orange?style=flat-square)](API_Reference.md)
@@ -36,7 +36,7 @@
 ## 📥 安装
 
 ```bash
-go get -u github.com/yuan71058/Efunc@v2.3.0
+go get -u github.com/yuan71058/Efunc@v2.4.0
 ```
 
 ## 🚀 快速开始
@@ -110,10 +110,11 @@ import (
 | 🔤 | `B编码` | URL / Base64 / Base32 / Hex / HTML / JSON / QP / Punycode 编解码 |
 | ⚙️ | `C程序` | 延时、GUID、日志、命令执行 |
 | 🔢 | `Float64转换` | 高精度浮点运算 |
-| 🎲 | `H汇编` | 随机数生成 |
+| 🎲 | `H汇编` | 汇编器（机器码构建 & 执行） |
 | 🌐 | `IP` | IP 地址转换 |
 | 🔢 | `Int转换` | 整数转换 |
 | 🔐 | `J校验` | MD5 / CRC32 / CRC64 / SHA / HMAC / 文件哈希 / 校验比对 |
+| 🔑 | `J加解密` | AES/DES/3DES/RC4/XOR/TEA/XXTEA 对称加解密 |
 | 📮 | `L类_post数据类` | POST 数据构造 |
 | 🗺 | `Map` | Map 操作、结构体互转 |
 | 📂 | `M目录` | 目录创建、枚举、删除 |
@@ -165,6 +166,18 @@ import (
 | 🔄 | `C类型转换` | `cast` | 类型安全转换 |
 | 📦 | `Jjson` | `gjson` / `sjson` | JSON 高效读写 |
 
+#### Windows 底层操作模块（v2.4.0 新增）
+
+> ⚠️ 以下模块仅支持 Windows 平台
+
+| 模块 | 文件 | 基于 API | 功能 |
+|:----:|:-----|:------|:-----|
+| 🖱 | `J键鼠` | `user32.dll` | 键盘鼠标模拟（按键/组合键/文本输入/鼠标移动点击/滚轮） |
+| 💾 | `H内存` | `kernel32.dll` | 进程内存操作（读写/搜索/AOB/分配释放/进程枚举/模块基址） |
+| 🧵 | `X线程` | `kernel32.dll` | 多线程管理（创建/挂起/恢复/临界区/事件/互斥体/信号量） |
+| ⚡ | `X系统命令` | `advapi32.dll` | 系统命令（关机/重启/注销/锁屏/剪辑版/消息框/环境变量） |
+| 🪝 | `HHook` | MinHook + cgo | API Hook 引擎（Inline Hook/IAT Hook） |
+
 ## 📐 命名规则
 
 所有函数采用 **拼音首字母大写 + 分类名 + 下划线 + 功能名** 命名，直观易读：
@@ -178,8 +191,8 @@ import (
 | `E` | 邮件 | `E邮件_发送` |
 | `F` | 文件监控 | `F文件监控_监控目录变化` |
 | `G` | 协程池 | `G协程池_提交任务` |
-| `H` | 汇编/客户端 | `H客户端_Get` |
-| `J` | 校验/JSON/结构体 | `J校验_取md5` / `Jjson_取值` / `J结构体_合并` |
+| `H` | 汇编/内存/Hook/客户端 | `H内存_读整数` / `HHook_安装` / `H客户端_Get` |
+| `J` | 校验/JSON/结构体/加解密/键鼠 | `J校验_取md5` / `J加解密_AES_CBC加密` / `J键鼠_按键` |
 | `K` | 表格/环境变量 | `K表格_快速创建` / `K环境变量_加载` |
 | `L` | 日志/POST数据 | `L日志_信息` |
 | `M` | 目录/命令行 | `M目录_创建` / `M命令行_取字符串参数` |
@@ -191,7 +204,7 @@ import (
 | `T` | 图片/模板 | `T模板_执行` |
 | `V` | 数据校验 | `V校验_验证结构体` |
 | `W` | 文件/文本/网页 | `W文本_取出中间文本` |
-| `X` | 系统信息/消息总线 | `X系统信息_取CPU使用率` / `X消息_发布` |
+| `X` | 系统信息/系统命令/线程/消息总线 | `X系统_关机` / `X线程_创建` / `X系统信息_取CPU使用率` |
 | `Y` | 原子 | `Y原子_递增` |
 | `Z` | 字节集/正则 | `Z字节集_寻找` |
 
@@ -247,6 +260,24 @@ import (
 | [Code Wiki](Code_Wiki.md) | 项目架构与模块详解 |
 
 ## 📋 更新日志
+
+### v2.4.0 (2026-05-25)
+
+**🖱 Windows 底层操作模块（5 个新模块）**
+- 新增 `J键鼠` — 键盘鼠标操作模块（模拟按键/组合键/文本输入/鼠标移动点击/滚轮），含完整虚拟键码常量
+- 新增 `H内存` — 进程内存操作模块（读写/搜索/AOB特征码/分配释放/进程枚举/模块基址/保护修改）
+- 新增 `X线程` — 多线程模块（内核线程创建/挂起/恢复/终止、临界区、事件、互斥体、信号量、G协程封装）
+- 新增 `X系统命令` — 系统命令模块（关机/重启/注销/锁屏、剪辑版读写、消息框、环境变量、远程关机）
+- 新增 `HHook` — API Hook 模块（集成 MinHook 库，Inline Hook/IAT Hook，Cgo 封装）
+
+**🔑 加解密模块（1 个新模块）**
+- 新增 `J加解密` — 对称加解密模块（AES CBC/ECB/GCM/CTR/CFB/OFB、DES/3DES CBC/ECB、RC4、XOR、TEA/XXTEA），密钥/IV 生成工具
+
+**📝 其他改进**
+- 删除冗余的 `H汇编.go`、`H汇编_amd64.go`、`H汇编_amd64.s`，汇编器保留机器码构建功能
+- 随机数函数迁移至 `核心库.go`
+- 所有新模块代码均添加详细中文注释
+- 函数总数增长至 800+
 
 ### v2.3.0 (2026-05-24)
 

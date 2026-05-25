@@ -3,12 +3,15 @@
 package utils
 
 import (
+	"crypto/rand"
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
-	"math/rand"
+	mrand "math/rand"
 	"reflect"
 	"strings"
+	"sync"
+	"time"
 
 	"github.com/gogf/gf/v2/util/gconv"
 	"golang.org/x/text/encoding/simplifiedchinese"
@@ -269,5 +272,20 @@ func Utf8到文本(src string) string {
 // 返回:
 //   - int: [min, max] 范围内的随机整数
 func Q取随机数(min, max int) int {
-	return rand.Intn(max-min+1) + min
+	return mrand.Intn(max-min+1) + min
+}
+
+var h汇编随机源 = mrand.New(mrand.NewSource(time.Now().UnixNano()))
+var h汇编随机锁 sync.Mutex
+
+func H汇编_取随机数(起始数, 结束数 int) int {
+	h汇编随机锁.Lock()
+	defer h汇编随机锁.Unlock()
+	return h汇编随机源.Intn(结束数-起始数+1) + 起始数
+}
+
+func H汇编_取随机字节(长度 int) ([]byte, error) {
+	b := make([]byte, 长度)
+	_, err := rand.Read(b)
+	return b, err
 }
