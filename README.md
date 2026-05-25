@@ -6,7 +6,7 @@
 
 中文命名的工具函数库，涵盖编码转换、加密校验、文本处理、文件操作、网络请求、并发安全数据结构、数据库操作、权限管理等常用功能
 
-[![Version](https://img.shields.io/badge/Version-v2.2.0-blue?style=flat-square)](https://github.com/yuan71058/Efunc/releases)
+[![Version](https://img.shields.io/badge/Version-v2.3.0-blue?style=flat-square)](https://github.com/yuan71058/Efunc/releases)
 [![Go Version](https://img.shields.io/badge/Go-%3E%3D1.18-00ADD8?style=flat-square&logo=go)](https://go.dev/)
 [![License](https://img.shields.io/badge/License-MIT-green?style=flat-square)](LICENSE)
 [![Functions](https://img.shields.io/badge/Functions-700%2B-orange?style=flat-square)](API_Reference.md)
@@ -36,7 +36,7 @@
 ## 📥 安装
 
 ```bash
-go get -u github.com/yuan71058/Efunc@v2.2.0
+go get -u github.com/yuan71058/Efunc@v2.3.0
 ```
 
 ## 🚀 快速开始
@@ -247,6 +247,27 @@ import (
 | [Code Wiki](Code_Wiki.md) | 项目架构与模块详解 |
 
 ## 📋 更新日志
+
+### v2.3.0 (2026-05-24)
+
+**🔍 OpenCV 找图模块（12 个新函数）**
+- 新增 `OCV_找图` — 归一化相关系数模板匹配，返回左上角坐标+置信度
+- 新增 `OCV_找图带方法` — 指定匹配方法（平方差/相关/相关系数）
+- 新增 `OCV_找图中心` — 返回匹配区域中心点（直接用于单击操作）
+- 新增 `OCV_找图全部` — 查找所有匹配位置（自动去重）
+- 新增 `OCV_找图区域` — 指定区域内匹配，返回源图绝对坐标
+- 新增 `OCV_找图掩码` — 带掩码匹配（支持透明图/不规则ROI）
+- 新增 `OCV_找图SIFT` — SIFT 特征匹配（抗旋转/缩放/视角）
+- 新增 `OCV_找图ORB` — ORB 特征匹配（免费、快速，实时场景）
+- 新增 `OCV_找图AKAZE` — AKAZE 特征匹配（非线性尺度空间，抗模糊）
+- 新增 `OCV_特征匹配` — 通用特征匹配引擎（支持任意 Feature2D 检测器）
+- 新增 `OCV_找图多尺度` — 多比例缩放模板逐一匹配，返回最佳比例
+- 新增 `OCV_找图边缘` — 边缘匹配（Canny+模板匹配，对颜色/光照不敏感）
+
+**📝 其他改进**
+- OCV 函数总数从 67 增长至 79
+- API 文档新增方法选择指南，帮助用户快速选择合适算法
+- demo 新增视觉示例（opencv build tag 条件编译）
 
 ### v2.2.0 (2026-05-24)
 

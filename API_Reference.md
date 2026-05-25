@@ -2548,6 +2548,85 @@ fmt.Println(*name, *port)
 | `OCV_良好角点` | `func OCV_良好角点(矩阵 gocv.Mat, 最大数量 int, 质量, 最小距离 float64) []image.Point` | Shi-Tomasi 角点 |
 | `OCV_FAST角点` | `func OCV_FAST角点(矩阵 gocv.Mat, 阈值 int) []image.Point` | FAST 角点检测 |
 
+### 模板匹配（找图）
+
+> 本节函数在源图中查找模板小图，返回匹配位置和相似度。适用于桌面自动化、图像识别等场景。
+
+| 函数 | 签名 | 说明 |
+|------|------|------|
+| `OCV_找图` | `func OCV_找图(源图 gocv.Mat, 模板 gocv.Mat, 相似度 float64) (image.Point, float64, error)` | 归一化相关系数匹配（默认方法，抗光照变化），回左上角坐标+置信度 |
+| `OCV_找图带方法` | `func OCV_找图带方法(源图, 模板 gocv.Mat, 相似度 float64, 方法 gocv.TemplateMatchMode) (image.Point, float64, error)` | 指定匹配方法：`TmSqdiffNormed`(平方差)/`TmCcorrNormed`(相关)/`TmCcoeffNormed`(相关系数) |
+| `OCV_找图中心` | `func OCV_找图中心(源图, 模板 gocv.Mat, 相似度 float64) (image.Point, float64, error)` | 返回匹配区域中心点（适合直接用于点击操作） |
+| `OCV_找图全部` | `func OCV_找图全部(源图, 模板 gocv.Mat, 相似度 float64, 最小间距 int) ([]image.Point, []float64, error)` | 查找所有匹配位置（去重），返回位置列表和置信度列表 |
+| `OCV_找图区域` | `func OCV_找图区域(源图, 模板 gocv.Mat, 左, 上, 宽度, 高度 int, 相似度 float64) (image.Point, float64, error)` | 在指定矩形区域内查找，返回源图绝对坐标 |
+| `OCV_找图掩码` | `func OCV_找图掩码(源图, 模板, 掩码 gocv.Mat, 相似度 float64) (image.Point, float64, error)` | 带掩码匹配（支持透明图，掩码白色区域参与匹配） |
+
+**示例**：
+
+```go
+源图, _ := OCV_读取图片("screenshot.png")
+defer 源图.Close()
+模板, _ := OCV_读取图片("icon.png")
+defer 模板.Close()
+
+位置, 置信度, err := OCV_找图(源图, 模板, 0.8)
+if err == nil && 置信度 >= 0.8 {
+    fmt.Printf("找到: (%d, %d) 置信度: %.2f\n", 位置.X, 位置.Y, 置信度)
+    // 标记匹配位置
+    结果 := OCV_画矩形(源图, image.Rect(位置.X, 位置.Y, 位置.X+模板.Cols(), 位置.Y+模板.Rows()), color.RGBA{0, 255, 0, 255}, 2)
+    OCV_保存图片(结果, "result.png")
+}
+```
+
+### 特征匹配（高级找图）
+
+> 本节函数使用 SIFT/ORB/AKAZE 特征匹配算法，**抗缩放、旋转、视角和光照变化**，适合复杂场景下的图像定位。注意：SIFT 有专利限制。
+
+| 函数 | 签名 | 说明 |
+|------|------|------|
+| `OCV_找图SIFT` | `func OCV_找图SIFT(源图, 模板 gocv.Mat, 最小匹配点数 int) (image.Rectangle, []gocv.DMatch, error)` | SIFT 特征匹配（抗旋转/缩放/视角，精度最高） |
+| `OCV_找图ORB` | `func OCV_找图ORB(源图, 模板 gocv.Mat, 最小匹配点数 int) (image.Rectangle, []gocv.DMatch, error)` | ORB 特征匹配（免费、快速，适合实时场景） |
+| `OCV_找图AKAZE` | `func OCV_找图AKAZE(源图, 模板 gocv.Mat, 最小匹配点数 int) (image.Rectangle, []gocv.DMatch, error)` | AKAZE 特征匹配（非线性尺度空间，适合模糊/压缩图片） |
+| `OCV_特征匹配` | `func OCV_特征匹配(检测器 gocv.Feature2D, 源图, 模板 gocv.Mat, 最小匹配点数 int, 范数类型 gocv.NormType, 距离比例 float64) (image.Rectangle, []gocv.DMatch, error)` | 通用引擎（支持任意 Feature2D 检测器+Lowe's ratio test） |
+| `OCV_找图多尺度` | `func OCV_找图多尺度(源图, 模板 gocv.Mat, 最小比例, 最大比例, 步长, 相似度 float64) (image.Point, float64, float64, error)` | 多尺度模板匹配（缩放模板后逐一匹配，返回最佳比例） |
+| `OCV_找图边缘` | `func OCV_找图边缘(源图, 模板 gocv.Mat, 低阈值, 高阈值, 相似度 float64) (image.Point, float64, error)` | 边缘匹配（Canny 提取边缘后模板匹配，对颜色/光照不敏感） |
+
+**示例**：
+
+```go
+源图, _ := OCV_读取图片("scene.jpg")
+defer 源图.Close()
+模板, _ := OCV_读取图片("object.jpg")
+defer 模板.Close()
+
+// ORB 特征匹配（推荐，快速 + 抗缩放旋转）
+矩形, 匹配点, _ := OCV_找图ORB(源图, 模板, 10)
+if len(匹配点) >= 10 {
+    fmt.Println("ORB找到:", 矩形)
+    结果 := OCV_画矩形(源图, 矩形, color.RGBA{0, 255, 0, 255}, 2)
+    OCV_保存图片(结果, "orb_match.jpg")
+}
+
+// 多尺度匹配（模板可能被缩放时使用）
+位置, 置信度, 比例, _ := OCV_找图多尺度(源图, 模板, 0.3, 3.0, 0.1, 0.8)
+fmt.Printf("多尺度: (%d,%d) 比例:%.1fx 置信度:%.2f\n", 位置.X, 位置.Y, 比例, 置信度)
+
+// 边缘匹配（跨主题/颜色不同时使用）
+位置, 置信度, _ = OCV_找图边缘(源图, 模板, 50, 150, 0.5)
+fmt.Println("边缘匹配:", 位置, 置信度)
+```
+
+**方法选择指南**：
+
+| 场景 | 推荐方法 | 原因 |
+|------|----------|------|
+| 模板与源图尺寸一致、无旋转 | `OCV_找图` | 速度最快，最常用 |
+| 大小可能不同、无旋转 | `OCV_找图多尺度` | 多比例逐一匹配 |
+| 存在旋转/缩放/视角变化 | `OCV_找图ORB` | ORB 免费、快速 |
+| 精度要求极高 | `OCV_找图SIFT` | SIFT 精度最高 |
+| 颜色/主题不同（如按钮换肤） | `OCV_找图边缘` | 仅匹配形状轮廓 |
+| 模板有透明背景 | `OCV_找图掩码` | 忽略透明区域 |
+
 ### 直方图
 
 | 函数 | 签名 | 说明 |
@@ -2678,5 +2757,5 @@ for _, c := range contours {
 | utils/D数据库 | 1 | 19 |
 | utils/C窗口 | 1 | 24 |
 | utils/C进程 | 1 | 15 |
-| utils/OCV视觉 | 1 | 67 |
-| **合计** | **57** | **700+** |
+| utils/OCV视觉 | 1 | 79 |
+| **合计** | **57** | **712+** |
