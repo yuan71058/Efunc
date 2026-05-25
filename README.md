@@ -6,10 +6,10 @@
 
 中文命名的工具函数库，涵盖编码转换、加密校验、文本处理、文件操作、网络请求、并发安全数据结构、数据库操作、权限管理等常用功能
 
-[![Version](https://img.shields.io/badge/Version-v2.4.0-blue?style=flat-square)](https://github.com/yuan71058/Efunc/releases)
+[![Version](https://img.shields.io/badge/Version-v2.5.0-blue?style=flat-square)](https://github.com/yuan71058/Efunc/releases)
 [![Go Version](https://img.shields.io/badge/Go-%3E%3D1.18-00ADD8?style=flat-square&logo=go)](https://go.dev/)
 [![License](https://img.shields.io/badge/License-MIT-green?style=flat-square)](LICENSE)
-[![Functions](https://img.shields.io/badge/Functions-700%2B-orange?style=flat-square)](API_Reference.md)
+[![Functions](https://img.shields.io/badge/Functions-800%2B-orange?style=flat-square)](API_Reference.md)
 [![Go Reference](https://pkg.go.dev/badge/github.com/yuan71058/Efunc.svg)](https://pkg.go.dev/github.com/yuan71058/Efunc)
 
 [快速开始](#-快速开始) · [模块一览](#-模块一览) · [命名规则](#-命名规则) · [更新日志](#-更新日志)
@@ -36,7 +36,7 @@
 ## 📥 安装
 
 ```bash
-go get -u github.com/yuan71058/Efunc@v2.4.0
+go get -u github.com/yuan71058/Efunc@v2.5.0
 ```
 
 ## 🚀 快速开始
@@ -81,6 +81,36 @@ import (
 	. "github.com/yuan71058/Efunc/utils"      // 工具函数（点导入可直接调用）
 )
 ```
+
+## 📺 Demo 示例
+
+项目内置 46+ 示例函数，覆盖全部模块，均有详细中文注释：
+
+```bash
+# 运行 Demo（输出到文件）
+go run ./cmd/demo
+
+# 指定输出路径
+go run ./cmd/demo my_output.txt
+
+# OpenCV 视觉示例（需安装 gocv）
+go run -tags opencv ./cmd/demo
+```
+
+Demo 涵盖内容：
+
+| 分类 | 示例函数 |
+|:---:|:-----|
+| 🏠 基础工具 | `示例_核心库` `示例_编码` `示例_校验` `示例_文本` `示例_文件` `示例_时间` `示例_数组` `示例_正则` `示例_字节集` `示例_程序` `示例_类型转换` `示例_Map操作` `示例_辅助` |
+| 🔐 进阶工具 | `示例_加解密` `示例_图片` `示例_HTTP客户端` `示例_网页工具` |
+| 🗄 数据与存储 | `示例_表格` `示例_json` `示例_配置` `示例_数据库` `示例_键值库` |
+| ⚡ 并发与调度 | `示例_协程池` `示例_消息总线` `示例_定时任务` `示例_对象池` |
+| 📝 模板与校验 | `示例_模板` `示例_数据校验` `示例_结构体合并` `示例_表达式计算` |
+| 📊 日志与监控 | `示例_日志` `示例_环境变量` `示例_系统信息` `示例_命令行` `示例_日期解析` `示例_文件监控` |
+| 🌐 网络与通信 | `示例_IP` `示例_TCP` `示例_WebSocket` `示例_HTTP服务端` `示例_爬虫` `示例_邮件` |
+| 🔒 并发结构 | `示例_队列` `示例_临界许可` `示例_读写锁` `示例_正则表达式类` `示例_队列泛型` |
+| 🛡 权限管理 | `示例_权限管理` |
+| 👁 视觉 | `示例_视觉`（需 opencv 标签） |
 
 ## 🧩 模块一览
 
@@ -260,6 +290,30 @@ import (
 | [Code Wiki](Code_Wiki.md) | 项目架构与模块详解 |
 
 ## 📋 更新日志
+
+### v2.5.0 (2026-05-26)
+
+**📺 Demo 大幅增强**
+- Demo 示例函数从 34 个扩展至 46+，覆盖全部模块
+- 所有 demo 函数添加详细中文注释，包含参数说明和用法提示
+- 代码按功能分类组织（基础工具 / 进阶工具 / 数据与存储 / 并发与调度 / 模板与校验 / 日志与监控 / 网络与通信 / 并发结构 / 权限管理 / 视觉）
+- 新增 `示例_加解密` — AES/DES/3DES/RC4/XOR/HMAC 加解密演示
+- 新增 `示例_图片` — 创建/缩放/裁剪/旋转/特效/二维码演示
+- 新增 `示例_HTTP客户端` — GET/POST 请求示例
+- 新增 `示例_网页工具` — 域名提取/Cookie 合并
+- 新增 `示例_数据库` — SQLite ORM（增删改查/事务）
+- 新增 `示例_键值库` — BuntDB KV 存储/过期/索引
+- 新增 `示例_协程池` — ants 协程池任务提交
+- 新增 `示例_消息总线` — 发布-订阅模式
+- 新增 `示例_定时任务` — Cron 定时调度
+- 新增 `示例_文件监控` — fsnotify 文件变化监控
+- 新增 `示例_爬虫` — Colly 网页爬虫
+- 新增 `示例_权限管理` — Casbin RBAC 权限控制
+
+**📖 API 文档完善**
+- API_Reference.md 新增 7 个模块文档：X线程、H内存、J键鼠、X系统命令、HHook、H汇编_汇编器、H汇编_汇编指令
+- TOC 目录新增对应锚点链接
+- 模块统计表更新，文档覆盖度达 100%
 
 ### v2.4.0 (2026-05-25)
 

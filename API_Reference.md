@@ -64,6 +64,13 @@
   - [2.46 D数据库](#246-d数据库orm-数据库操作)
   - [2.47 C窗口](#247-c窗口windows-窗口操作)
   - [2.48 C进程](#248-c进程windows-进程管理)
+  - [2.50 X线程](#250-x线程windows-线程管理)
+  - [2.51 H内存](#251-h内存windows-内存操作)
+  - [2.52 J键鼠](#252-j键鼠键盘鼠标操作)
+  - [2.53 X系统命令](#253-x系统命令系统命令与工具)
+  - [2.54 HHook](#254-hhookapi-hook-钩子)
+  - [2.55 H汇编_汇编器](#255-h汇编_汇编器机器码生成与执行)
+  - [2.56 H汇编_汇编指令](#256-h汇编_汇编指令x86-汇编指令集)
 
 ---
 
@@ -2706,6 +2713,394 @@ for _, c := range contours {
 
 > ⚠️ **注意**：OCV视觉模块依赖 OpenCV 4.x C++ 库，使用前需安装 OpenCV。详见 [gocv 安装指南](https://gocv.io/getting-started/)
 
+---
+
+## 2.50 X线程（Windows 线程管理）
+
+> 基于 Win32 API `kernel32.dll` | 文件：`utils/X线程.go` | 仅 Windows 平台
+
+### 线程创建与管理
+
+| 函数 | 签名 | 说明 |
+|------|------|------|
+| `X线程_创建` | `func X线程_创建(线程函数 uintptr, 参数 uintptr) (syscall.Handle, error)` | 创建新线程并立即执行 |
+| `X线程_取当前ID` | `func X线程_取当前ID() uint32` | 获取当前线程 ID |
+| `X线程_取当前伪句柄` | `func X线程_取当前伪句柄() syscall.Handle` | 获取当前线程伪句柄（不可跨进程） |
+| `X线程_挂起` | `func X线程_挂起(hThread syscall.Handle) (uint32, error)` | 挂起线程（增加挂起计数） |
+| `X线程_恢复` | `func X线程_恢复(hThread syscall.Handle) (uint32, error)` | 恢复线程（减少挂起计数） |
+| `X线程_终止` | `func X线程_终止(hThread syscall.Handle, 退出码 uint32) error` | 强制终止线程（不推荐） |
+| `X线程_关闭句柄` | `func X线程_关闭句柄(handle syscall.Handle) error` | 关闭内核对象句柄 |
+| `X线程_延时` | `func X线程_延时(毫秒 uint32)` | 暂停当前线程指定毫秒数 |
+
+### 线程等待
+
+| 函数 | 签名 | 说明 |
+|------|------|------|
+| `X线程_等待单个` | `func X线程_等待单个(handle syscall.Handle, 超时毫秒 uint32) uint32` | 等待单个内核对象变为有信号 |
+| `X线程_等待多个` | `func X线程_等待多个(handles []syscall.Handle, 等待全部 bool, 超时毫秒 uint32) uint32` | 等待多个内核对象 |
+
+### 临界区（Critical Section）
+
+| 函数 | 签名 | 说明 |
+|------|------|------|
+| `X线程_临界区_创建` | `func X线程_临界区_创建() (*CRITICAL_SECTION, error)` | 创建临界区对象 |
+| `X线程_临界区_销毁` | `func X线程_临界区_销毁(cs *CRITICAL_SECTION)` | 销毁临界区 |
+| `X线程_临界区_进入` | `func X线程_临界区_进入(cs *CRITICAL_SECTION)` | 进入临界区（阻塞等待） |
+| `X线程_临界区_离开` | `func X线程_临界区_离开(cs *CRITICAL_SECTION)` | 离开临界区 |
+
+### 事件（Event）
+
+| 函数 | 签名 | 说明 |
+|------|------|------|
+| `X线程_事件_创建` | `func X线程_事件_创建(手动重置 bool, 初始状态 bool, 名称 string) (syscall.Handle, error)` | 创建同步事件对象 |
+| `X线程_事件_设置` | `func X线程_事件_设置(hEvent syscall.Handle) error` | 设置事件为有信号 |
+| `X线程_事件_重置` | `func X线程_事件_重置(hEvent syscall.Handle) error` | 重置事件为无信号 |
+| `X线程_事件_脉冲` | `func X线程_事件_脉冲(hEvent syscall.Handle) error` | 脉冲触发（设置并立即重置） |
+
+### 互斥体（Mutex）
+
+| 函数 | 签名 | 说明 |
+|------|------|------|
+| `X线程_互斥体_创建` | `func X线程_互斥体_创建(名称 string) (syscall.Handle, bool, error)` | 创建互斥体（返回句柄、是否已存在、错误） |
+| `X线程_互斥体_打开` | `func X线程_互斥体_打开(名称 string) (syscall.Handle, error)` | 打开已有命名互斥体 |
+| `X线程_互斥体_释放` | `func X线程_互斥体_释放(hMutex syscall.Handle) error` | 释放互斥体所有权 |
+
+### 信号量（Semaphore）
+
+| 函数 | 签名 | 说明 |
+|------|------|------|
+| `X线程_信号量_创建` | `func X线程_信号量_创建(初始计数 int32, 最大计数 int32, 名称 string) (syscall.Handle, error)` | 创建信号量 |
+| `X线程_信号量_打开` | `func X线程_信号量_打开(名称 string) (syscall.Handle, error)` | 打开已有命名信号量 |
+| `X线程_信号量_释放` | `func X线程_信号量_释放(hSemaphore syscall.Handle, 释放数量 int32) (int32, error)` | 释放信号量（增加可用计数） |
+
+### 协程级线程（G线程）
+
+| 函数 | 签名 | 说明 |
+|------|------|------|
+| `X线程_协程_创建` | `func X线程_协程_创建(执行函数 func()) *G线程` | 创建基于 goroutine 的协作式线程 |
+| `(G线程) 启动` | `func (t *G线程) 启动() error` | 启动线程并立即执行 |
+| `(G线程) 暂停` | `func (t *G线程) 暂停() error` | 挂起线程执行 |
+| `(G线程) 继续` | `func (t *G线程) 继续() error` | 恢复挂起的线程 |
+| `(G线程) 退出` | `func (t *G线程) 退出()` | 优雅关闭线程 |
+
+**常量**：
+
+| 常量 | 值 | 说明 |
+|------|-----|------|
+| `WAIT_OBJECT_0` | 0x00000000 | 等待成功 |
+| `WAIT_TIMEOUT` | 0x00000102 | 等待超时 |
+| `INFINITE` | 0xFFFFFFFF | 无限等待 |
+| `ERROR_ALREADY_EXISTS` | 183 | 互斥体已存在 |
+
+---
+
+## 2.51 H内存（Windows 内存操作）
+
+> 基于 Win32 API `kernel32.dll` | 文件：`utils/H内存.go` | 仅 Windows 平台
+
+### 进程内存读写
+
+| 函数 | 签名 | 说明 |
+|------|------|------|
+| `H内存_打开进程` | `func H内存_打开进程(进程ID uint32, 权限 uint32) (syscall.Handle, error)` | 打开目标进程获取句柄 |
+| `H内存_读整数` | `func H内存_读整数(hProcess syscall.Handle, 地址 uintptr) (int32, error)` | 读取 32 位有符号整数 |
+| `H内存_读整数64` | `func H内存_读整数64(hProcess syscall.Handle, 地址 uintptr) (int64, error)` | 读取 64 位有符号整数 |
+| `H内存_读字节集` | `func H内存_读字节集(hProcess syscall.Handle, 地址 uintptr, 长度 uint32) ([]byte, error)` | 读取原始字节数据 |
+| `H内存_读浮点数` | `func H内存_读浮点数(hProcess syscall.Handle, 地址 uintptr) (float32, error)` | 读取 32 位浮点数 |
+| `H内存_读浮点数64` | `func H内存_读浮点数64(hProcess syscall.Handle, 地址 uintptr) (float64, error)` | 读取 64 位浮点数 |
+| `H内存_写整数` | `func H内存_写整数(hProcess syscall.Handle, 地址 uintptr, 值 int32) error` | 写入 32 位整数 |
+| `H内存_写整数64` | `func H内存_写整数64(hProcess syscall.Handle, 地址 uintptr, 值 int64) error` | 写入 64 位整数 |
+| `H内存_写字节集` | `func H内存_写字节集(hProcess syscall.Handle, 地址 uintptr, 数据 []byte) error` | 写入原始字节数据 |
+| `H内存_关闭句柄` | `func H内存_关闭句柄(hProcess syscall.Handle) error` | 关闭进程句柄 |
+
+### 内存搜索（AOB 特征码）
+
+| 函数 | 签名 | 说明 |
+|------|------|------|
+| `H内存_搜索字节集` | `func H内存_搜索字节集(hProcess syscall.Handle, 特征码 []byte, 起始地址 uintptr, 长度 uintptr) ([]uintptr, error)` | AOB 特征码搜索（0xFF 为通配符） |
+| `H内存_搜索文本` | `func H内存_搜索文本(hProcess syscall.Handle, 文本 string, 起始地址 uintptr, 长度 uintptr) ([]uintptr, error)` | 在内存中搜索文本 |
+
+### 虚拟内存管理
+
+| 函数 | 签名 | 说明 |
+|------|------|------|
+| `H内存_分配内存` | `func H内存_分配内存(hProcess syscall.Handle, 大小 uintptr) (uintptr, error)` | 在目标进程分配可执行读写内存 |
+| `H内存_释放内存` | `func H内存_释放内存(hProcess syscall.Handle, 地址 uintptr) error` | 释放目标进程已分配内存 |
+| `H内存_修改保护` | `func H内存_修改保护(hProcess syscall.Handle, 地址 uintptr, 大小 uintptr, 新保护 uint32) (uint32, error)` | 修改内存区域保护属性 |
+| `H内存_查询内存` | `func H内存_查询内存(hProcess syscall.Handle, 地址 uintptr) (*MEMORY_BASIC_INFORMATION, error)` | 查询内存区域信息 |
+
+### 进程枚举与管理
+
+| 函数 | 签名 | 说明 |
+|------|------|------|
+| `H内存_取进程ID` | `func H内存_取进程ID(进程名 string) (uint32, error)` | 通过进程名获取进程 ID |
+| `H内存_枚举进程` | `func H内存_枚举进程() ([]PROCESSENTRY32W, error)` | 枚举所有进程 |
+| `H内存_取模块基址` | `func H内存_取模块基址(进程ID uint32, 模块名 string) (uintptr, error)` | 获取指定模块的加载基址 |
+| `H内存_终止进程` | `func H内存_终止进程(进程ID uint32) error` | 强制终止进程 |
+| `H内存_取进程名称` | `func H内存_取进程名称(进程ID uint32) (string, []uint16, error)` | 获取进程可执行文件名称 |
+| `H内存_是否存在进程` | `func H内存_是否存在进程(进程ID uint32) bool` | 检查进程是否运行 |
+| `H内存_取进程位数` | `func H内存_取进程位数(进程ID uint32) int` | 检测进程是 32 位还是 64 位 |
+
+**常量**：
+
+| 常量 | 值 | 说明 |
+|------|-----|------|
+| `PROCESS_VM_READ` | 0x0010 | 读取进程内存权限 |
+| `PROCESS_VM_WRITE` | 0x0020 | 写入进程内存权限 |
+| `PROCESS_VM_OPERATION` | 0x0008 | 操作进程内存权限 |
+| `PROCESS_ALL_ACCESS` | 0x1F0FFF | 所有权限 |
+| `PAGE_READWRITE` | 0x04 | 读写权限 |
+| `PAGE_EXECUTE_READWRITE` | 0x40 | 可执行读写权限 |
+
+---
+
+## 2.52 J键鼠（键盘鼠标操作）
+
+> 基于 Win32 API `user32.dll` | 文件：`utils/J键鼠.go` | 仅 Windows 平台
+
+### 键盘操作
+
+| 函数 | 签名 | 说明 |
+|------|------|------|
+| `J键鼠_按键` | `func J键鼠_按键(虚拟键码 int, 按下 bool)` | 模拟按下或弹起指定键 |
+| `J键鼠_按键组合` | `func J键鼠_按键组合(虚拟键码1, 虚拟键码2 int)` | 模拟组合键（如 Ctrl+C） |
+| `J键鼠_模拟按键` | `func J键鼠_模拟按键(虚拟键码 int)` | 模拟按键的完整按下+弹起 |
+| `J键鼠_取按键状态` | `func J键鼠_取按键状态(虚拟键码 int) int16` | 异步获取按键是否按下 |
+| `J键鼠_是否按下` | `func J键鼠_是否按下(虚拟键码 int) bool` | 判断键是否处于按下状态 |
+| `J键鼠_取键状态` | `func J键鼠_取键状态(虚拟键码 int) int16` | 从消息队列获取键状态 |
+| `J键鼠_模拟文本输入` | `func J键鼠_模拟文本输入(text string)` | 逐字符模拟文本输入 |
+
+### 鼠标操作
+
+| 函数 | 签名 | 说明 |
+|------|------|------|
+| `J键鼠_移动鼠标` | `func J键鼠_移动鼠标(x, y int)` | 移动光标到指定坐标 |
+| `J键鼠_取鼠标位置` | `func J键鼠_取鼠标位置() (int, int)` | 获取当前光标坐标 |
+| `J键鼠_鼠标左键单击` | `func J键鼠_鼠标左键单击()` | 左键单击 |
+| `J键鼠_鼠标左键按下` | `func J键鼠_鼠标左键按下()` | 左键按下 |
+| `J键鼠_鼠标左键弹起` | `func J键鼠_鼠标左键弹起()` | 左键弹起 |
+| `J键鼠_鼠标右键单击` | `func J键鼠_鼠标右键单击()` | 右键单击 |
+| `J键鼠_鼠标中键单击` | `func J键鼠_鼠标中键单击()` | 中键单击 |
+| `J键鼠_鼠标滚轮` | `func J键鼠_鼠标滚轮(delta int)` | 滚动滚轮（正值向上） |
+
+### 屏幕控制
+
+| 函数 | 签名 | 说明 |
+|------|------|------|
+| `J键鼠_取屏幕宽度` | `func J键鼠_取屏幕宽度() int` | 获取主屏幕宽度 |
+| `J键鼠_取屏幕高度` | `func J键鼠_取屏幕高度() int` | 获取主屏幕高度 |
+| `J键鼠_锁定输入` | `func J键鼠_锁定输入(锁定 bool)` | 锁定/解锁键盘鼠标输入 |
+
+### 常用虚拟键码常量
+
+| 常量 | 值 | 说明 |
+|------|-----|------|
+| `VK_LBUTTON` | 0x01 | 鼠标左键 |
+| `VK_RBUTTON` | 0x02 | 鼠标右键 |
+| `VK_RETURN` | 0x0D | Enter |
+| `VK_SHIFT` | 0x10 | Shift |
+| `VK_CONTROL` | 0x11 | Ctrl |
+| `VK_MENU` | 0x12 | Alt |
+| `VK_ESCAPE` | 0x1B | Esc |
+| `VK_SPACE` | 0x20 | 空格 |
+| `VK_LEFT` | 0x25 | 左方向键 |
+| `VK_UP` | 0x26 | 上方向键 |
+| `VK_RIGHT` | 0x27 | 右方向键 |
+| `VK_DOWN` | 0x28 | 下方向键 |
+| `VK_A` ~ `VK_Z` | 0x41~0x5A | 字母键 A-Z |
+| `VK_0` ~ `VK_9` | 0x30~0x39 | 数字键 0-9 |
+| `VK_F1` ~ `VK_F12` | 0x70~0x7B | 功能键 F1-F12 |
+| `VK_NUMPAD0` ~ `VK_NUMPAD9` | 0x60~0x69 | 小键盘数字 0-9 |
+
+---
+
+## 2.53 X系统命令（系统命令与工具）
+
+> 基于 Win32 API `user32.dll` / `kernel32.dll` / `advapi32.dll` | 文件：`utils/X系统命令.go` | 仅 Windows 平台
+
+### 系统控制
+
+| 函数 | 签名 | 说明 |
+|------|------|------|
+| `X系统_关机` | `func X系统_关机(强制 bool) error` | 关机（含断电） |
+| `X系统_重启` | `func X系统_重启(强制 bool) error` | 重启系统 |
+| `X系统_注销` | `func X系统_注销(强制 bool) error` | 注销当前用户 |
+| `X系统_锁定工作站` | `func X系统_锁定工作站() error` | 锁定工作站（Win+L） |
+| `X系统_启用关机权限` | `func X系统_启用关机权限() error` | 启用 SeShutdownPrivilege 权限 |
+| `X系统_远程关机` | `func X系统_远程关机(计算机名 string, 消息 string, 超时秒 uint32, 强制 bool) error` | 远程关机 |
+
+### 剪辑版
+
+| 函数 | 签名 | 说明 |
+|------|------|------|
+| `X系统_置剪辑版文本` | `func X系统_置剪辑版文本(text string) error` | 设置剪贴板文本 |
+| `X系统_取剪辑版文本` | `func X系统_取剪辑版文本() (string, error)` | 获取剪贴板文本 |
+| `X系统_清空剪辑版` | `func X系统_清空剪辑版() error` | 清空剪贴板 |
+
+### 消息框
+
+| 函数 | 签名 | 说明 |
+|------|------|------|
+| `X系统_信息框` | `func X系统_信息框(标题, 内容 string)` | 弹出信息提示框（仅确定按钮） |
+| `X系统_信息框_确认` | `func X系统_信息框_确认(标题, 内容 string) int` | 弹出确认对话框（确定/取消） |
+| `X系统_信息框_是否` | `func X系统_信息框_是否(标题, 内容 string) int` | 弹出是否对话框（是/否） |
+
+### 系统命令
+
+| 函数 | 签名 | 说明 |
+|------|------|------|
+| `X系统_执行命令` | `func X系统_执行命令(命令 string, 参数 ...string) (string, error)` | 执行命令行并返回输出 |
+| `X系统_执行命令隐藏` | `func X系统_执行命令隐藏(命令 string, 参数 ...string) error` | 执行命令行（隐藏窗口） |
+| `X系统_取计算机名` | `func X系统_取计算机名() (string, error)` | 获取计算机名称 |
+| `X系统_取用户名` | `func X系统_取用户名() (string, error)` | 获取当前用户名 |
+
+### 屏幕保护与环境变量
+
+| 函数 | 签名 | 说明 |
+|------|------|------|
+| `X系统_禁止屏幕保护` | `func X系统_禁止屏幕保护(禁止 bool) error` | 禁止/恢复屏幕保护 |
+| `X系统_置屏保超时` | `func X系统_置屏保超时(秒 int) error` | 设置屏幕保护超时时间 |
+| `X系统_置环境变量` | `func X系统_置环境变量(名称, 值 string) error` | 设置环境变量 |
+| `X系统_取环境变量` | `func X系统_取环境变量(名称 string) string` | 获取环境变量 |
+| `X系统_删除环境变量` | `func X系统_删除环境变量(名称 string) error` | 删除环境变量 |
+
+---
+
+## 2.54 HHook（API Hook 钩子）
+
+> 基于 MinHook 库（CGO） | 文件：`utils/HHook.go` | 仅 Windows 平台
+
+| 函数 | 签名 | 说明 |
+|------|------|------|
+| `HHook_初始化` | `func HHook_初始化() error` | 初始化 MinHook 引擎 |
+| `HHook_卸载` | `func HHook_卸载() error` | 卸载 MinHook 引擎 |
+| `HHook_安装Hook` | `func HHook_安装Hook(目标地址, 回调地址 uintptr) (uintptr, error)` | 为目标函数安装钩子，返回原始函数地址（trampoline） |
+| `HHook_安装ApiHook` | `func HHook_安装ApiHook(模块名, 函数名 string, 回调地址 uintptr) (uintptr, error)` | 通过模块名和函数名为 API 安装钩子 |
+| `HHook_安装ApiHookEx` | `func HHook_安装ApiHookEx(模块名, 函数名 string, 回调地址 uintptr) (原地址, 目标地址 uintptr, err error)` | 安装钩子扩展版，同时返回原地址和目标地址 |
+| `HHook_卸载Hook` | `func HHook_卸载Hook(目标地址 uintptr) error` | 卸载指定钩子，恢复原始函数 |
+| `HHook_启用Hook` | `func HHook_启用Hook(目标地址 uintptr) error` | 启用指定钩子 |
+| `HHook_禁用Hook` | `func HHook_禁用Hook(目标地址 uintptr) error` | 禁用指定钩子 |
+| `HHook_启用全部Hook` | `func HHook_启用全部Hook() error` | 启用所有已安装钩子 |
+| `HHook_禁用全部Hook` | `func HHook_禁用全部Hook() error` | 禁用所有已安装钩子 |
+| `HHook_排队启用Hook` | `func HHook_排队启用Hook(目标地址 uintptr) error` | 排队启用（调用 HHook_应用排队 后生效） |
+| `HHook_排队禁用Hook` | `func HHook_排队禁用Hook(目标地址 uintptr) error` | 排队禁用（调用 HHook_应用排队 后生效） |
+| `HHook_应用排队` | `func HHook_应用排队() error` | 批量应用排队的启用/禁用操作 |
+| `HHook_取状态文本` | `func HHook_取状态文本(状态码 int) string` | 将 MinHook 状态码转换为中文描述 |
+
+---
+
+## 2.55 H汇编_汇编器（机器码生成与执行）
+
+> 文件：`utils/H汇编_汇编器.go` | 仅 Windows 平台 | 依赖 `golang.org/x/sys/windows`
+
+| 函数 | 签名 | 说明 |
+|------|------|------|
+| `H汇编_置代码` | `func H汇编_置代码(代码 []byte)` | 设置待执行的机器码 |
+| `H汇编_取代码` | `func H汇编_取代码() []byte` | 获取当前机器码缓冲区的副本 |
+| `H汇编_运行汇编代码` | `func H汇编_运行汇编代码() (uintptr, error)` | 在当前进程执行已构建的机器码，返回 EAX 值 |
+| `H汇编_远程执行汇编代码` | `func H汇编_远程执行汇编代码(进程ID uint32, 代码 []byte) error` | 在指定进程中远程执行机器码 |
+
+---
+
+## 2.56 H汇编_汇编指令（x86 汇编指令集）
+
+> 文件：`utils/H汇编_汇编指令.go` | 仅 Windows 平台
+>
+> 提供完整的 x86 汇编指令生成函数，向内部缓冲区追加机器码。使用前需先调用 `H汇编_置代码(nil)` 初始化，添加指令后调用 `H汇编_运行汇编代码()` 执行。
+
+### 栈操作指令
+
+| 函数 | 签名 | 说明 |
+|------|------|------|
+| `H汇编_LEAVE` | `func H汇编_LEAVE()` | 恢复栈帧 |
+| `H汇编_PUSHAD` | `func H汇编_PUSHAD()` | 压入所有通用寄存器 |
+| `H汇编_POPAD` | `func H汇编_POPAD()` | 弹出所有通用寄存器 |
+| `H汇编_NOP` | `func H汇编_NOP()` | 空操作 |
+| `H汇编_RET` | `func H汇编_RET()` | 返回 |
+| `H汇编_IN_AL_DX` | `func H汇编_IN_AL_DX()` | 从 DX 端口读入 AL |
+| `H汇编_TEST_EAX_EAX` | `func H汇编_TEST_EAX_EAX()` | TEST EAX, EAX（设置标志位） |
+
+### MOV 寄存器 ← 立即数
+
+| 函数 | 签名 | 说明 |
+|------|------|------|
+| `H汇编_MOV_EAX` | `func H汇编_MOV_EAX(v int32)` | MOV EAX, imm |
+| `H汇编_MOV_EBX` | `func H汇编_MOV_EBX(v int32)` | MOV EBX, imm |
+| `H汇编_MOV_ECX` | `func H汇编_MOV_ECX(v int32)` | MOV ECX, imm |
+| `H汇编_MOV_EDX` | `func H汇编_MOV_EDX(v int32)` | MOV EDX, imm |
+| `H汇编_MOV_ESI` | `func H汇编_MOV_ESI(v int32)` | MOV ESI, imm |
+| `H汇编_MOV_ESP` | `func H汇编_MOV_ESP(v int32)` | MOV ESP, imm |
+| `H汇编_MOV_EBP` | `func H汇编_MOV_EBP(v int32)` | MOV EBP, imm |
+| `H汇编_MOV_EDI` | `func H汇编_MOV_EDI(v int32)` | MOV EDI, imm |
+
+### MOV 寄存器 ← [dword ptr addr]
+
+| 函数 | 签名 | 说明 |
+|------|------|------|
+| `H汇编_MOV_EAX_DWORD_PTR` | `func H汇编_MOV_EAX_DWORD_PTR(addr int32)` | MOV EAX, [addr] |
+| `H汇编_MOV_EBX_DWORD_PTR` | `func H汇编_MOV_EBX_DWORD_PTR(addr int32)` | MOV EBX, [addr] |
+| `H汇编_MOV_EBP_DWORD_PTR` | `func H汇编_MOV_EBP_DWORD_PTR(addr int32)` | MOV EBP, [addr] |
+| `H汇编_MOV_ECX_DWORD_PTR` | `func H汇编_MOV_ECX_DWORD_PTR(addr int32)` | MOV ECX, [addr] |
+| `H汇编_MOV_EDX_DWORD_PTR` | `func H汇编_MOV_EDX_DWORD_PTR(addr int32)` | MOV EDX, [addr] |
+| `H汇编_MOV_ESI_DWORD_PTR` | `func H汇编_MOV_ESI_DWORD_PTR(addr int32)` | MOV ESI, [addr] |
+| `H汇编_MOV_EDI_DWORD_PTR` | `func H汇编_MOV_EDI_DWORD_PTR(addr int32)` | MOV EDI, [addr] |
+| `H汇编_MOV_ESP_DWORD_PTR` | `func H汇编_MOV_ESP_DWORD_PTR(addr int32)` | MOV ESP, [addr] |
+| `H汇编_MOV_DWORD_PTR_EAX` | `func H汇编_MOV_DWORD_PTR_EAX(addr int32)` | MOV [addr], EAX |
+
+### MOV 寄存器 ← [寄存器]
+
+| 函数 | 签名 | 说明 |
+|------|------|------|
+| `H汇编_MOV_EAX_DWORD_PTR_EAX` | `func H汇编_MOV_EAX_DWORD_PTR_EAX()` | MOV EAX, [EAX] |
+| `H汇编_MOV_EAX_DWORD_PTR_EBX` | `func H汇编_MOV_EAX_DWORD_PTR_EBX()` | MOV EAX, [EBX] |
+| `H汇编_MOV_EAX_DWORD_PTR_ECX` | `func H汇编_MOV_EAX_DWORD_PTR_ECX()` | MOV EAX, [ECX] |
+| `H汇编_MOV_EAX_DWORD_PTR_EDX` | `func H汇编_MOV_EAX_DWORD_PTR_EDX()` | MOV EAX, [EDX] |
+| `H汇编_MOV_EAX_DWORD_PTR_EBP` | `func H汇编_MOV_EAX_DWORD_PTR_EBP()` | MOV EAX, [EBP] |
+| `H汇编_MOV_EAX_DWORD_PTR_ESI` | `func H汇编_MOV_EAX_DWORD_PTR_ESI()` | MOV EAX, [ESI] |
+| `H汇编_MOV_EAX_DWORD_PTR_EDI` | `func H汇编_MOV_EAX_DWORD_PTR_EDI()` | MOV EAX, [EDI] |
+| `H汇编_MOV_EAX_DWORD_PTR_ESP` | `func H汇编_MOV_EAX_DWORD_PTR_ESP()` | MOV EAX, [ESP] |
+
+### MOV 寄存器 ← [寄存器 + 偏移]（EAX 为目标）
+
+| 函数 | 签名 | 说明 |
+|------|------|------|
+| `H汇编_MOV_EAX_DWORD_PTR_EAX_ADD` | `func H汇编_MOV_EAX_DWORD_PTR_EAX_ADD(disp int32)` | MOV EAX, [EAX+disp] |
+| `H汇编_MOV_EAX_DWORD_PTR_EBX_ADD` | `func H汇编_MOV_EAX_DWORD_PTR_EBX_ADD(disp int32)` | MOV EAX, [EBX+disp] |
+| `H汇编_MOV_EAX_DWORD_PTR_ECX_ADD` | `func H汇编_MOV_EAX_DWORD_PTR_ECX_ADD(disp int32)` | MOV EAX, [ECX+disp] |
+| `H汇编_MOV_EAX_DWORD_PTR_EDX_ADD` | `func H汇编_MOV_EAX_DWORD_PTR_EDX_ADD(disp int32)` | MOV EAX, [EDX+disp] |
+| `H汇编_MOV_EAX_DWORD_PTR_EBP_ADD` | `func H汇编_MOV_EAX_DWORD_PTR_EBP_ADD(disp int32)` | MOV EAX, [EBP+disp] |
+| `H汇编_MOV_EAX_DWORD_PTR_ESI_ADD` | `func H汇编_MOV_EAX_DWORD_PTR_ESI_ADD(disp int32)` | MOV EAX, [ESI+disp] |
+| `H汇编_MOV_EAX_DWORD_PTR_EDI_ADD` | `func H汇编_MOV_EAX_DWORD_PTR_EDI_ADD(disp int32)` | MOV EAX, [EDI+disp] |
+| `H汇编_MOV_EAX_DWORD_PTR_ESP_ADD` | `func H汇编_MOV_EAX_DWORD_PTR_ESP_ADD(disp int32)` | MOV EAX, [ESP+disp] |
+
+### MOV 寄存器 ← [寄存器 + 偏移]（其他寄存器）
+
+| 函数 | 签名 | 说明 |
+|------|------|------|
+| `H汇编_MOV_EBX_DWORD_PTR_EAX_ADD` | `func H汇编_MOV_EBX_DWORD_PTR_EAX_ADD(disp int32)` | MOV EBX, [EAX+disp] |
+| `H汇编_MOV_EBX_DWORD_PTR_EBX_ADD` | `func H汇编_MOV_EBX_DWORD_PTR_EBX_ADD(disp int32)` | MOV EBX, [EBX+disp] |
+| `H汇编_MOV_EBX_DWORD_PTR_ECX_ADD` | `func H汇编_MOV_EBX_DWORD_PTR_ECX_ADD(disp int32)` | MOV EBX, [ECX+disp] |
+| `H汇编_MOV_EBX_DWORD_PTR_EDX_ADD` | `func H汇编_MOV_EBX_DWORD_PTR_EDX_ADD(disp int32)` | MOV EBX, [EDX+disp] |
+| `H汇编_MOV_EBX_DWORD_PTR_EBP_ADD` | `func H汇编_MOV_EBX_DWORD_PTR_EBP_ADD(disp int32)` | MOV EBX, [EBP+disp] |
+| `H汇编_MOV_EBX_DWORD_PTR_ESI_ADD` | `func H汇编_MOV_EBX_DWORD_PTR_ESI_ADD(disp int32)` | MOV EBX, [ESI+disp] |
+| `H汇编_MOV_EBX_DWORD_PTR_EDI_ADD` | `func H汇编_MOV_EBX_DWORD_PTR_EDI_ADD(disp int32)` | MOV EBX, [EDI+disp] |
+| `H汇编_MOV_EBX_DWORD_PTR_ESP_ADD` | `func H汇编_MOV_EBX_DWORD_PTR_ESP_ADD(disp int32)` | MOV EBX, [ESP+disp] |
+
+> **注意**：还包含 `H汇编_MOV_ECX_DWORD_PTR_*_ADD`、`H汇编_MOV_EDX_DWORD_PTR_*_ADD`、`H汇编_MOV_ESI_DWORD_PTR_*_ADD` 等系列函数，以及 `ADD`、`SUB`、`PUSH`、`CALL` 等算术/控制流指令。更多指令详见源文件 `utils/H汇编_汇编指令.go`。
+
+**示例**：
+
+```go
+// 构建并执行汇编代码
+H汇编_置代码(nil) // 初始化缓冲区
+H汇编_MOV_EAX(42)     // MOV EAX, 42
+H汇编_RET()            // RET
+result, _ := H汇编_运行汇编代码() // 执行，返回 EAX 值 = 42
+fmt.Println("结果:", result)
+```
+
+---
+
 | 模块 | 文件数 | 函数/方法数 |
 |------|--------|------------|
 | class | 8 | 75 |
@@ -2758,4 +3153,11 @@ for _, c := range contours {
 | utils/C窗口 | 1 | 24 |
 | utils/C进程 | 1 | 15 |
 | utils/OCV视觉 | 1 | 79 |
-| **合计** | **57** | **712+** |
+| utils/X线程 | 1 | 30 |
+| utils/H内存 | 1 | 24 |
+| utils/J键鼠 | 1 | 18 |
+| utils/X系统命令 | 1 | 22 |
+| utils/HHook | 1 | 14 |
+| utils/H汇编_汇编器 | 1 | 4 |
+| utils/H汇编_汇编指令 | 1 | 40+ |
+| **合计** | **64** | **840+** |
