@@ -21,6 +21,7 @@
 ## ✨ 特性
 
 - 🇨🇳 **中文命名** — 函数名直观易读，降低学习门槛
+- 🌍 **英文版本** — `en/` 目录提供 `Category_Function` 风格英文命名
 - 📦 **开箱即用** — `go get` 一键安装，点导入直接调用
 - 🔒 **并发安全** — 内置互斥锁、读写锁、线程安全队列等数据结构
 - 🔐 **加密校验** — MD5 / SHA / CRC32 / RSA 签名验签一应俱全
@@ -81,6 +82,44 @@ import (
 	. "github.com/yuan71058/Efunc/utils"      // 工具函数（点导入可直接调用）
 )
 ```
+
+## 🌍 English Version — `en/`
+
+项目提供英文命名版本，位于 `en/` 目录，函数名采用 `Category_Function` 风格（如 `Text_Between`、`Crypto_AESEncrypt`），功能与中文版完全对等，适合英文环境或国际化项目使用。
+
+```bash
+go get github.com/yuan71058/Efunc/en
+```
+
+```go
+import "github.com/yuan71058/Efunc/en/utils"
+
+func main() {
+	utils.Text_Between("<div>Hello</div>", "<div>", "</div>") // "Hello"
+	utils.Checksum_MD5("hello")                               // "5d41402abc4b2a76b9719d911017c592"
+	utils.Encoding_URLEncode("hello world")                   // "hello+world"
+	utils.Crypto_AESEncrypt(plaintext, key)
+}
+```
+
+### en/ 模块一览
+
+| 分类 | 模块 | 主要函数 |
+|:----:|:-----|:---------|
+| 🏠 核心与类型 | Core / Cast / IntConv / Float64Conv / ByteData | `IntToStr` `ToString` `ToBool` `BytesToInt` |
+| ✏️ 文本与编码 | Text / Encoding / Regex | `Text_Between` `Text_Left` `Encoding_Base64Encode` `Regex_Find` |
+| 🔐 加密与安全 | Crypto / RSA / Checksum | `Crypto_AESEncrypt` `RSA_Encrypt` `Checksum_MD5` `Checksum_SHA256` |
+| 🌐 网络与 HTTP | IP / HTTP Utils / HTTP Client / Web Utils / Spider | `HTTPClient_Get` `Spider_Visit` `IP_IsPrivate` |
+| 📂 文件与系统 | File / FileWatcher / Directory / Program | `File_Read` `File_Exists` `Dir_Create` |
+| ⏱ 时间 | Time / DateParse / Cron | `Time_Now` `Time_Format` `Cron_AddJob` |
+| 📊 数据与配置 | JSON / Config / Env / Log / Validation / Expression | `JSON_Get` `Config_Load` `Log_Info` |
+| ⚡ 并发 | Goroutine Pool / Message Bus / ByteBuffer Pool | `Pool_Submit` `Bus_Publish` |
+| 🖼 媒体 | Image / OpenCV | `Image_Resize` `Image_QRCode` `OpenCV_MatchTemplate` |
+| 🗄 数据库 | Database / BuntDB | `Database_ConnectMySQL` `BuntDB_Set` |
+| 🪟 Windows 专用 | Process / Thread / Input / Window / Memory / Hook / ASM | `Window_Find` `Memory_ReadInt32` `Hook_Install` |
+| 🛡 权限 | Permission | `Permission_Enforce` `Permission_AddPolicy` |
+
+> 📖 完整英文版文档见 [en/README.md](en/README.md)
 
 ## 📺 Demo 示例
 
@@ -288,6 +327,7 @@ Demo 涵盖内容：
 |:-----|:-----|
 | [API 参考文档](API_Reference.md) | 全部 700+ 函数的详细说明 |
 | [Code Wiki](Code_Wiki.md) | 项目架构与模块详解 |
+| [英文版文档](en/README.md) | `en/` 英文命名版完整文档 |
 
 ## 📋 更新日志
 
