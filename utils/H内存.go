@@ -24,13 +24,11 @@ var (
 	procWriteProcessMemory        = kernel32H内存.NewProc("WriteProcessMemory")       // 写入进程内存
 	procVirtualAllocEx            = kernel32H内存.NewProc("VirtualAllocEx")            // 在远程进程分配内存
 	procVirtualFreeEx             = kernel32H内存.NewProc("VirtualFreeEx")             // 释放远程进程内存
+	procCreateRemoteThread        = kernel32H内存.NewProc("CreateRemoteThread")        // 创建远程线程
 	procVirtualProtectEx          = kernel32H内存.NewProc("VirtualProtectEx")          // 修改远程进程内存保护属性
 	procVirtualQueryEx            = kernel32H内存.NewProc("VirtualQueryEx")            // 查询远程进程内存信息
 
-	// 进程/模块快照 API
-	procCreateToolhelp32Snapshot  = kernel32H内存.NewProc("CreateToolhelp32Snapshot") // 创建进程/模块快照
-	procProcess32FirstW           = kernel32H内存.NewProc("Process32FirstW")           // 枚举第一个进程
-	procProcess32NextW            = kernel32H内存.NewProc("Process32NextW")            // 枚举下一个进程
+	// 进程/模块快照 API（procCreateToolhelp32Snapshot/procProcess32FirstW/procProcess32NextW 见 C进程.go）
 	procModule32FirstW            = kernel32H内存.NewProc("Module32FirstW")            // 枚举第一个模块
 	procModule32NextW             = kernel32H内存.NewProc("Module32NextW")             // 枚举下一个模块
 	procGetModuleBaseNameW        = kernel32H内存.NewProc("GetModuleBaseNameW")        // 获取模块基础名称
@@ -46,8 +44,6 @@ const (
 	PROCESS_VM_READ           = 0x0010  // 读取进程内存权限
 	PROCESS_VM_WRITE          = 0x0020  // 写入进程内存权限
 	PROCESS_VM_OPERATION      = 0x0008  // 操作进程内存权限
-	PROCESS_QUERY_INFORMATION = 0x0400  // 查询进程信息权限
-	PROCESS_TERMINATE         = 0x0001  // 终止进程权限
 	PROCESS_CREATE_THREAD     = 0x0002  // 创建远程线程权限
 	PROCESS_ALL_ACCESS        = 0x1F0FFF // 所有权限
 
@@ -61,7 +57,6 @@ const (
 	PAGE_EXECUTE_READWRITE = 0x40 // 可执行 + 可读 + 可写
 
 	// 快照标志
-	TH32CS_SNAPPROCESS  = 0x00000002 // 进程快照
 	TH32CS_SNAPMODULE   = 0x00000008 // 模块快照
 	TH32CS_SNAPMODULE32 = 0x00000010 // 32位模块快照
 
@@ -83,19 +78,7 @@ type MEMORY_BASIC_INFORMATION struct {
 	Type              uint32  // 类型（PRIVATE/MAPPED/IMAGE）
 }
 
-// PROCESSENTRY32W 进程列表条目结构体
-type PROCESSENTRY32W struct {
-	DwSize              uint32           // 结构体大小（调用前必须设置）
-	CntUsage            uint32           // 引用计数
-	Th32ProcessID       uint32           // 进程 ID
-	Th32DefaultHeapID   uintptr          // 默认堆句柄
-	Th32ModuleID        uint32           // 模块 ID
-	CntThreads          uint32           // 线程数量
-	Th32ParentProcessID uint32           // 父进程 ID
-	PcPriClassBase      int32            // 线程优先级基值
-	DwFlags             uint32           // 标志位
-	SzExeFile           [MAX_PATH]uint16 // 可执行文件名称（UTF-16）
-}
+// PROCESSENTRY32W 见 C进程.go 中的定义
 
 // MODULEENTRY32W 模块列表条目结构体
 type MODULEENTRY32W struct {
@@ -435,7 +418,7 @@ func H内存_取进程ID(进程名 string) (uint32, error) {
 	defer procCloseHandleH.Call(snapshot)
 
 	var pe32 PROCESSENTRY32W
-	pe32.DwSize = uint32(unsafe.Sizeof(pe32))
+	pe32.Size = uint32(unsafe.Sizeof(pe32))
 
 	ret, _, _ := procProcess32FirstW.Call(snapshot, uintptr(unsafe.Pointer(&pe32)))
 	if ret == 0 {
@@ -443,9 +426,9 @@ func H内存_取进程ID(进程名 string) (uint32, error) {
 	}
 
 	for {
-		name := syscall.UTF16ToString(pe32.SzExeFile[:])
+		name := syscall.UTF16ToString(pe32.ExeFile[:])
 		if name == 进程名 {
-			return pe32.Th32ProcessID, nil
+			return pe32.ProcessID, nil
 		}
 		ret, _, _ = procProcess32NextW.Call(snapshot, uintptr(unsafe.Pointer(&pe32)))
 		if ret == 0 {
@@ -466,7 +449,7 @@ func H内存_枚举进程() ([]PROCESSENTRY32W, error) {
 	defer procCloseHandleH.Call(snapshot)
 
 	var pe32 PROCESSENTRY32W
-	pe32.DwSize = uint32(unsafe.Sizeof(pe32))
+	pe32.Size = uint32(unsafe.Sizeof(pe32))
 
 	var result []PROCESSENTRY32W
 	ret, _, _ := procProcess32FirstW.Call(snapshot, uintptr(unsafe.Pointer(&pe32)))
@@ -566,7 +549,7 @@ func H内存_取进程名称(进程ID uint32) (string, []uint16, error) {
 	defer procCloseHandleH.Call(snapshot)
 
 	var pe32 PROCESSENTRY32W
-	pe32.DwSize = uint32(unsafe.Sizeof(pe32))
+	pe32.Size = uint32(unsafe.Sizeof(pe32))
 
 	ret, _, _ := procProcess32FirstW.Call(snapshot, uintptr(unsafe.Pointer(&pe32)))
 	if ret == 0 {
@@ -574,8 +557,8 @@ func H内存_取进程名称(进程ID uint32) (string, []uint16, error) {
 	}
 
 	for {
-		if pe32.Th32ProcessID == 进程ID {
-			return syscall.UTF16ToString(pe32.SzExeFile[:]), pe32.SzExeFile[:], nil
+		if pe32.ProcessID == 进程ID {
+			return syscall.UTF16ToString(pe32.ExeFile[:]), pe32.ExeFile[:], nil
 		}
 		ret, _, _ = procProcess32NextW.Call(snapshot, uintptr(unsafe.Pointer(&pe32)))
 		if ret == 0 {

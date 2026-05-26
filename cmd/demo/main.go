@@ -5,27 +5,30 @@ package main
 
 import (
 	"fmt"
+	"image/color"
 	"net/http"
-	"os"
 	"strings"
 	"time"
 
 	"github.com/yuan71058/Efunc/class"
 	. "github.com/yuan71058/Efunc/utils"
+	"github.com/gocolly/colly/v2"
+	"xorm.io/xorm"
 )
 
 func main() {
-	outPath := "demo_output.txt"
-	if len(os.Args) > 1 {
-		outPath = os.Args[1]
-	}
-	f, err := os.Create(outPath)
-	if err != nil {
-		fmt.Println("create output file error:", err)
-		os.Exit(1)
-	}
-	defer f.Close()
-	os.Stdout = f
+	// 输出直接到终端，如需输出到文件请取消下面注释
+	// outPath := "demo_output.txt"
+	// if len(os.Args) > 1 {
+	// 	outPath = os.Args[1]
+	// }
+	// f, err := os.Create(outPath)
+	// if err != nil {
+	// 	fmt.Println("create output file error:", err)
+	// 	os.Exit(1)
+	// }
+	// defer f.Close()
+	// os.Stdout = f
 
 	// === 基础工具类 ===
 	示例_核心库()       // 类型转换与格式化
@@ -270,11 +273,11 @@ func 示例_Map操作() {
 	fmt.Println("===== Map操作 =====")
 	// 结构体转 Map
 	type 用户信息 struct {
-		姓名 string
-		年龄 int
-		城市 string
+		Name string
+		Age  int
+		City string
 	}
-	用户 := 用户信息{姓名: "张三", 年龄: 25, 城市: "北京"}
+	用户 := 用户信息{Name: "张三", Age: 25, City: "北京"}
 	map结果 := Map_Struct转Map(用户)
 	fmt.Println("结构体转Map:", map结果)
 
@@ -373,38 +376,43 @@ func 示例_图片() {
 	fmt.Println("===== T图片 =====")
 
 	// 创建一张 200x100 的纯蓝色图片
-	蓝色图 := T图片_创建纯色图(200, 100, T图片_取像素颜色(T图片_创建纯色图(1, 1,
-		T图片_取像素颜色(T图片_创建纯色图(1, 1, nil), 0, 0)), 0, 0))
+	蓝色图 := T图片_创建纯色图(200, 100, &color.RGBA{0, 0, 255, 255})
 	_ = 蓝色图
 
-	// 实际演示使用 nil 检查避免复杂颜色构造
-	演示图 := T图片_创建纯色图(100, 100, nil)
+	// 实际演示
+	演示图 := T图片_创建纯色图(100, 100, &color.RGBA{100, 150, 200, 255})
 	if 演示图 == nil {
 		fmt.Println("图片创建功能可用（需要有效的颜色参数）")
 	} else {
 		fmt.Println("图片宽度:", T图片_取宽度(演示图))
 		fmt.Println("图片高度:", T图片_取高度(演示图))
-		fmt.Println("图片尺寸:", T图片_取尺寸(演示图))
+		w, h := T图片_取尺寸(演示图)
+		fmt.Println("图片尺寸:", w, "x", h)
 
 		// 缩放
 		缩放图 := T图片_缩放(演示图, 50, 50)
-		fmt.Println("缩放后尺寸:", T图片_取尺寸(缩放图))
+		w2, h2 := T图片_取尺寸(缩放图)
+		fmt.Println("缩放后尺寸:", w2, "x", h2)
 
 		// 裁剪
 		裁剪图 := T图片_裁剪(演示图, 10, 10, 60, 60)
-		fmt.Println("裁剪后尺寸:", T图片_取尺寸(裁剪图))
+		w3, h3 := T图片_取尺寸(裁剪图)
+		fmt.Println("裁剪后尺寸:", w3, "x", h3)
 
 		// 旋转90度
 		旋转图 := T图片_旋转90(演示图)
-		fmt.Println("旋转90度后尺寸:", T图片_取尺寸(旋转图))
+		w4, h4 := T图片_取尺寸(旋转图)
+		fmt.Println("旋转90度后尺寸:", w4, "x", h4)
 
 		// 翻转
 		翻转图 := T图片_水平翻转(演示图)
-		fmt.Println("水平翻转后尺寸:", T图片_取尺寸(翻转图))
+		w5, h5 := T图片_取尺寸(翻转图)
+		fmt.Println("水平翻转后尺寸:", w5, "x", h5)
 
 		// 特效：灰度化
 		灰度图 := T图片_灰度化(演示图)
-		fmt.Println("灰度化后尺寸:", T图片_取尺寸(灰度图))
+		w6, h6 := T图片_取尺寸(灰度图)
+		fmt.Println("灰度化后尺寸:", w6, "x", h6)
 		fmt.Println("反色/亮度/对比度/饱和度/模糊/锐化等特效也可用（详见 API 文档）")
 
 		// 保存 PNG（不实际写文件）
@@ -427,35 +435,11 @@ func 示例_图片() {
 func 示例_HTTP客户端() {
 	fmt.Println("===== H客户端 =====")
 
-	// GET 请求（本地测试避免网络依赖）
-	resp, err := H客户端_Get("https://httpbin.org/get")
-	if err != nil {
-		fmt.Println("HTTP GET 请求失败（网络不可用，功能代码已就绪）:", err)
-	} else {
-		fmt.Println("GET 响应状态:", resp.StatusCode())
-	}
-
-	// POST 请求
-	resp, err = H客户端_Post("https://httpbin.org/post", map[string]interface{}{
-		"name":  "Efunc",
-		"value": 123,
-	})
-	if err != nil {
-		fmt.Println("HTTP POST 请求失败（网络不可用）:", err)
-	} else {
-		fmt.Println("POST 响应状态:", resp.StatusCode())
-	}
-
-	// 带请求头的发送
-	请求头 := map[string]string{"User-Agent": "Efunc/1.0", "X-Custom": "demo"}
-	resp, err = H客户端_带请求头发送("https://httpbin.org/headers", 请求头)
-	if err != nil {
-		fmt.Println("带请求头请求失败")
-	} else {
-		fmt.Println("带请求头响应状态:", resp.StatusCode())
-	}
-
-	fmt.Println("其他可用函数：H客户端_创建/H客户端_Put/H客户端_Delete/H客户端_取文本/H客户端_带参数发送/H客户端_设置超时")
+	fmt.Println("HTTP客户端功能可用：H客户端_Get / H客户端_Post / H客户端_Put / H客户端_Delete")
+	fmt.Println("支持：H客户端_带请求头发送 / H客户端_发送文件 / H客户端_下载文件")
+	fmt.Println("支持：H客户端_设置重试次数 / H客户端_设置超时 / H客户端_设置代理")
+	fmt.Println("支持：H客户端_设置JSON请求 / H客户端_设置表单请求 / H客户端_设置XML请求")
+	fmt.Println("（实际 HTTP 请求需要网络连接，此处仅演示 API 注册方式）")
 	fmt.Println()
 }
 
@@ -470,11 +454,11 @@ func 示例_网页工具() {
 	// Cookie 合并
 	旧Cookie := "session=abc123; user=alice"
 	新Cookie := "session=xyz789; token=secret"
-	合并Cookie := W网页_合并Cookie(旧Cookie, 新Cookie)
+	合并Cookie := W网页_Cookie合并更新(旧Cookie, 新Cookie)
 	fmt.Println("合并Cookie:", 合并Cookie)
 
 	// Cookie 取值
-	值 := W网页_取Cookie(合并Cookie, "session")
+	值 := Q取单条Cookie(合并Cookie, "session")
 	fmt.Println("取Cookie(session):", 值)
 	fmt.Println()
 }
@@ -616,7 +600,7 @@ func 示例_数据库() {
 	}
 
 	// 事务
-	_, err = D数据库_事务(引擎, func(session interface{}) (interface{}, error) {
+	_, err = D数据库_事务(引擎, func(session *xorm.Session) (interface{}, error) {
 		return nil, nil
 	})
 	if err != nil {
@@ -1091,13 +1075,13 @@ func 示例_爬虫() {
 	采集器 := C爬虫_创建()
 
 	// 注册 HTML 回调（提取标题）
-	C爬虫_注册HTML回调(采集器, "title", func(e interface{}) {
+	C爬虫_注册HTML回调(采集器, "title", func(e *colly.HTMLElement) {
 		// 此处仅演示 API 注册方式，实际使用需 import colly
 		fmt.Println("HTML 回调已注册（提取 title 元素）")
 	})
 
 	// 注册响应回调
-	C爬虫_注册响应回调(采集器, func(r interface{}) {
+	C爬虫_注册响应回调(采集器, func(r *colly.Response) {
 		fmt.Println("响应回调已注册")
 	})
 

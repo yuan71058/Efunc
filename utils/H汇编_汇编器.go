@@ -130,27 +130,34 @@ func H汇编_远程执行汇编代码(进程ID uint32, 代码 []byte) error {
 	}
 	defer windows.CloseHandle(hProcess)
 
-	remoteAddr, err := windows.VirtualAllocEx(hProcess, 0, uintptr(len(代码)), windows.MEM_COMMIT|windows.MEM_RESERVE, windows.PAGE_EXECUTE_READWRITE)
-	if err != nil {
+	remoteAddr, _, err := procVirtualAllocEx.Call(
+		uintptr(hProcess), 0, uintptr(len(代码)),
+		uintptr(uint32(windows.MEM_COMMIT|windows.MEM_RESERVE)),
+		uintptr(windows.PAGE_EXECUTE_READWRITE),
+	)
+	if remoteAddr == 0 {
 		return err
 	}
 
 	var written uintptr
 	err = windows.WriteProcessMemory(hProcess, remoteAddr, &代码[0], uintptr(len(代码)), &written)
 	if err != nil {
-		windows.VirtualFreeEx(hProcess, remoteAddr, 0, windows.MEM_RELEASE)
+		procVirtualFreeEx.Call(remoteAddr, 0, uintptr(windows.MEM_RELEASE))
 		return err
 	}
 
 	var threadID uint32
-	hThread, err := windows.CreateRemoteThread(hProcess, nil, 0, remoteAddr, 0, 0, &threadID)
-	if err != nil {
-		windows.VirtualFreeEx(hProcess, remoteAddr, 0, windows.MEM_RELEASE)
+	hThread, _, err := procCreateRemoteThread.Call(
+		uintptr(hProcess), 0, 0, remoteAddr, 0, 0,
+		uintptr(unsafe.Pointer(&threadID)),
+	)
+	if hThread == 0 {
+		procVirtualFreeEx.Call(remoteAddr, 0, uintptr(windows.MEM_RELEASE))
 		return err
 	}
-	defer windows.CloseHandle(hThread)
+	defer windows.CloseHandle(windows.Handle(hThread))
 
-	windows.WaitForSingleObject(hThread, windows.INFINITE)
-	windows.VirtualFreeEx(hProcess, remoteAddr, 0, windows.MEM_RELEASE)
+	windows.WaitForSingleObject(windows.Handle(hThread), windows.INFINITE)
+	procVirtualFreeEx.Call(remoteAddr, 0, uintptr(windows.MEM_RELEASE))
 	return nil
 }

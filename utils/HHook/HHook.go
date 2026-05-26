@@ -5,6 +5,15 @@ package HHook
 #cgo LDFLAGS: -lkernel32
 
 #include "MinHook.h"
+
+static inline MH_STATUS go_MH_CreateHook(void *pTarget, void *pDetour, LPVOID *ppOriginal) { return MH_CreateHook((LPVOID)pTarget, (LPVOID)pDetour, ppOriginal); }
+static inline MH_STATUS go_MH_RemoveHook(void *pTarget) { return MH_RemoveHook((LPVOID)pTarget); }
+static inline MH_STATUS go_MH_EnableHook(void *pTarget) { return MH_EnableHook((LPVOID)pTarget); }
+static inline MH_STATUS go_MH_DisableHook(void *pTarget) { return MH_DisableHook((LPVOID)pTarget); }
+static inline MH_STATUS go_MH_QueueEnableHook(void *pTarget) { return MH_QueueEnableHook((LPVOID)pTarget); }
+static inline MH_STATUS go_MH_QueueDisableHook(void *pTarget) { return MH_QueueDisableHook((LPVOID)pTarget); }
+static inline MH_STATUS go_MH_EnableAllHooks(void) { return MH_EnableHook(MH_ALL_HOOKS); }
+static inline MH_STATUS go_MH_DisableAllHooks(void) { return MH_DisableHook(MH_ALL_HOOKS); }
 */
 import "C"
 import (
@@ -52,7 +61,7 @@ func Uninit() error {
 
 func CreateHook(target, detour unsafe.Pointer) (original unsafe.Pointer, err error) {
 	var orig C.LPVOID
-	status := C.MH_CreateHook(C.LPVOID(target), C.LPVOID(detour), &orig)
+	status := C.go_MH_CreateHook(target, detour, &orig)
 	if status != C.MH_OK {
 		return nil, statusToError(status)
 	}
@@ -106,31 +115,31 @@ func CreateHookApiEx(module, procName string, detour unsafe.Pointer) (original, 
 }
 
 func RemoveHook(target unsafe.Pointer) error {
-	return statusToError(C.MH_RemoveHook(C.LPVOID(target)))
+	return statusToError(C.go_MH_RemoveHook(target))
 }
 
 func EnableHook(target unsafe.Pointer) error {
-	return statusToError(C.MH_EnableHook(C.LPVOID(target)))
+	return statusToError(C.go_MH_EnableHook(target))
 }
 
 func DisableHook(target unsafe.Pointer) error {
-	return statusToError(C.MH_DisableHook(C.LPVOID(target)))
+	return statusToError(C.go_MH_DisableHook(target))
 }
 
 func EnableAllHooks() error {
-	return statusToError(C.MH_EnableHook(C.MH_ALL_HOOKS))
+	return statusToError(C.go_MH_EnableAllHooks())
 }
 
 func DisableAllHooks() error {
-	return statusToError(C.MH_DisableHook(C.MH_ALL_HOOKS))
+	return statusToError(C.go_MH_DisableAllHooks())
 }
 
 func QueueEnableHook(target unsafe.Pointer) error {
-	return statusToError(C.MH_QueueEnableHook(C.LPVOID(target)))
+	return statusToError(C.go_MH_QueueEnableHook(target))
 }
 
 func QueueDisableHook(target unsafe.Pointer) error {
-	return statusToError(C.MH_QueueDisableHook(C.LPVOID(target)))
+	return statusToError(C.go_MH_QueueDisableHook(target))
 }
 
 func ApplyQueued() error {

@@ -941,7 +941,7 @@ func J加解密_XXTEA加密(明文, 密钥 []byte) (string, error) {
 	}
 
 	// 调用 XXTEA 核心加密
-	v = xxteaEncrypt(v, k)
+	v = xxteaEncrypt(v, [4]uint32{k[0], k[1], k[2], k[3]})
 
 	// 将 uint32 数组转换回字节集
 	result := u32LEToBytes(v)
@@ -975,7 +975,7 @@ func J加解密_XXTEA解密(密文Base64 string, 密钥 []byte) ([]byte, error) 
 		k[i] = uint32(密钥[i*4]) | uint32(密钥[i*4+1])<<8 | uint32(密钥[i*4+2])<<16 | uint32(密钥[i*4+3])<<24
 	}
 
-	v = xxteaDecrypt(v, k)
+	v = xxteaDecrypt(v, [4]uint32{k[0], k[1], k[2], k[3]})
 	return u32LEToBytes(v), nil
 }
 

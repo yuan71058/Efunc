@@ -6,7 +6,7 @@
 
 中文命名的工具函数库，涵盖编码转换、加密校验、文本处理、文件操作、网络请求、并发安全数据结构、数据库操作、权限管理等常用功能
 
-[![Version](https://img.shields.io/badge/Version-v2.5.0-blue?style=flat-square)](https://github.com/yuan71058/Efunc/releases)
+[![Version](https://img.shields.io/badge/Version-v2.5.1-blue?style=flat-square)](https://github.com/yuan71058/Efunc/releases)
 [![Go Version](https://img.shields.io/badge/Go-%3E%3D1.18-00ADD8?style=flat-square&logo=go)](https://go.dev/)
 [![License](https://img.shields.io/badge/License-MIT-green?style=flat-square)](LICENSE)
 [![Functions](https://img.shields.io/badge/Functions-800%2B-orange?style=flat-square)](API_Reference.md)
@@ -290,6 +290,17 @@ Demo 涵盖内容：
 | [Code Wiki](Code_Wiki.md) | 项目架构与模块详解 |
 
 ## 📋 更新日志
+
+### v2.5.1 (2026-05-26)
+
+**🐛 Bug 修复**
+- 修复 `Q权限_从文本创建` 传入 nil 适配器时 casbin v2.135.0 panic 问题
+- 修复 `J键鼠_是否按下` 0x8000 整数溢出错误（添加 uint16 类型转换）
+- 修复 `J加解密` XXTEA 加解密 `[]uint32` → `[4]uint32` 类型不匹配
+- 修复 `H汇编_汇编器` `VirtualAllocEx`/`CreateRemoteThread` 函数未定义（改用 kernel32 proc 调用）
+- 修复 `HHook` MinHook C LPVOID 类型转换错误（添加 C 包装函数）
+- 修复 Demo 中 `T图片_取尺寸` 多返回值 / `W网页_合并Cookie` 不存在 / `D数据库_事务` 回调类型不匹配等问题
+- Demo 中去掉阻塞网络的 httpbin.org 调用，所有模块本地即可完整运行
 
 ### v2.5.0 (2026-05-26)
 

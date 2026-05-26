@@ -134,8 +134,9 @@ func X系统_锁定工作站() error {
 
 func X系统_启用关机权限() error {
 	var hToken syscall.Handle
+	hProc, _ := syscall.GetCurrentProcess()
 	ret, _, err := advapi32.NewProc("OpenProcessToken").Call(
-		uintptr(syscall.GetCurrentProcess()),
+		uintptr(hProc),
 		uintptr(TOKEN_ADJUST_PRIVILEGES|TOKEN_QUERY),
 		uintptr(unsafe.Pointer(&hToken)),
 	)
@@ -160,7 +161,7 @@ func X系统_启用关机权限() error {
 	ret, _, err = procAdjustTokenPrivileges.Call(
 		uintptr(hToken), 0,
 		uintptr(unsafe.Pointer(&tp)),
-		uint32(unsafe.Sizeof(tp)), 0, 0,
+		uintptr(unsafe.Sizeof(tp)), 0, 0,
 	)
 	if ret == 0 {
 		return err

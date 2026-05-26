@@ -23,8 +23,7 @@ var (
 	procResumeThread         = kernel32X线程.NewProc("ResumeThread")         // 恢复线程
 	procTerminateThread      = kernel32X线程.NewProc("TerminateThread")      // 强制终止线程
 
-	// 线程等待与同步
-	procWaitForSingleObject   = kernel32X线程.NewProc("WaitForSingleObject")    // 等待单个对象
+	// 线程等待与同步（procWaitForSingleObject 见 C进程.go）
 	procWaitForMultipleObjects = kernel32X线程.NewProc("WaitForMultipleObjects") // 等待多个对象
 	procSleep                 = kernel32X线程.NewProc("Sleep")                  // 暂停当前线程
 
@@ -61,7 +60,6 @@ const (
 	WAIT_OBJECT_0    = 0x00000000 // 等待对象进入有信号状态
 	WAIT_TIMEOUT     = 0x00000102 // 等待超时
 	WAIT_FAILED      = 0xFFFFFFFF // 等待失败
-	INFINITE         = 0xFFFFFFFF // 无限等待
 	ERROR_ALREADY_EXISTS = 183   // 对象已存在（用于互斥体防重复运行）
 
 	// 事件创建标志

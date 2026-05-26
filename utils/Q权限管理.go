@@ -49,6 +49,9 @@ func Q权限_从文本创建(模型文本 string, 适配器 persist.Adapter) (*c
 	if err != nil {
 		return nil, err
 	}
+	if 适配器 == nil {
+		return casbin.NewEnforcer(m)
+	}
 	return casbin.NewEnforcer(m, 适配器)
 }
 
